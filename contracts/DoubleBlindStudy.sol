@@ -2,19 +2,19 @@ pragma solidity ^0.7.4;
 
 contract DoubleBlindStudy {
     
-    address payable internal pot;
-    uint256 internal startDate;
-    uint256 internal endDate;
-    uint256 internal duration;
+    address payable private pot;
+    uint256 private startDate;
+    uint256 private endDate;
+    uint256 private duration;
     
-    uint256 internal patientCount;
-    mapping (uint256 => Patient) internal patients;
+    uint256 private patientCount;
+    mapping (uint256 => Patient) private patients;
     
-    uint256 internal treatmentAdministrationReportCount;
-    mapping (uint256 => TreatmentAdministrationReport) internal treatmentAdministrationReports;
+    uint256 private treatmentAdministrationReportCount;
+    mapping (uint256 => TreatmentAdministrationReport) private treatmentAdministrationReports;
     
-    uint256 internal statusReportCount;
-    mapping (uint256 => StatusReport) internal statusReports;
+    uint256 private statusReportCount;
+    mapping (uint256 => StatusReport) private statusReports;
     
     enum Group {
         Treatment,
@@ -60,23 +60,45 @@ contract DoubleBlindStudy {
         duration = _duration;
         startDate = _startDate;
         endDate = startDate + _duration;
+        
+        patientCount = 0;
+        treatmentAdministrationReportCount = 0;
+        statusReportCount = 0;
     }
+    
+    // helpers
+    
+    function _random(uint seed) private view returns (uint) {
+        return uint(keccak256(abi.encodePacked(block.difficulty, block.timestamp, msg.sender, seed)));
+    } 
+    
+    // business logic
     
     //
     // add a patient to the study
     //
-    function registerPatient () public {}
+    function registerPatient (address payable _address, string memory _data) public {
+        patientCount++;
+        patients[patientCount] = Patient(patientCount, _address, _assignToGroup(), _data, block.timestamp);
+    }
     
     // 
     // assign patient to one of two groups - treatment or control
     //
-    function _assignToGroup () internal {}
+    function _assignToGroup () private returns(Group) {
+        uint seed = patientCount + treatmentAdministrationReportCount + statusReportCount;
+        uint randInt = _random(seed);
+        return randInt % 2 == 0 ? Group.Control : Group.Treatment;
+    }
     
     //
     // obscure the data in such a way that no one can see which 
     // patient pertains to which group
     //
-    function _blind () internal {}
+    // TODO:: find a solution for this. How can we blind the 
+    // patient?
+    //
+    function _blind () private {}
     
     //
     // order a treatment kit -- real or placebo -- 
@@ -98,10 +120,10 @@ contract DoubleBlindStudy {
     // 
     // automatically fired at the end of the study (on endDate)
     // 
-    function _concludeStudy () internal {}
+    function _concludeStudy () private {}
     
     // 
     // reverse the blinding procedure
     //
-    function _unblind () internal {}
+    function _unblind () private {}
 }
