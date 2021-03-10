@@ -16,6 +16,13 @@ contract DoubleBlindStudy {
     uint256 private statusReportCount;
     mapping (uint256 => StatusReport) private statusReports;
     
+    bool public active;
+    
+    modifier requireActive {
+        require(active);
+        _;
+    }
+    
     enum Group {
         Treatment,
         Control
@@ -64,20 +71,38 @@ contract DoubleBlindStudy {
         patientCount = 0;
         treatmentAdministrationReportCount = 0;
         statusReportCount = 0;
+        
+        active = true;
     }
     
     // helpers
     
+    //
+    // returns a pseudorandom number
+    //
     function _random(uint seed) private view returns (uint) {
         return uint(keccak256(abi.encodePacked(block.difficulty, block.timestamp, msg.sender, seed)));
     } 
+    
+    //
+    // The first transaction at or after 
+    // the end date will deactivate the contract and
+    // conclude the study. Ran at the end of all public 
+    // calls to the contract
+    //
+    function _checkIfEnded () private {
+        if (block.timestamp > endDate) {
+            active = false;
+            _concludeStudy();
+        }
+    }
     
     // business logic
     
     //
     // add a patient to the study
     //
-    function registerPatient (address payable _address, string memory _data) public {
+    function registerPatient (address payable _address, string memory _data) public requireActive {
         patientCount++;
         patients[patientCount] = Patient(patientCount, _address, _assignToGroup(), _data, block.timestamp);
     }
@@ -85,7 +110,7 @@ contract DoubleBlindStudy {
     // 
     // assign patient to one of two groups - treatment or control
     //
-    function _assignToGroup () private returns(Group) {
+    function _assignToGroup () private returns (Group) {
         uint seed = patientCount + treatmentAdministrationReportCount + statusReportCount;
         uint randInt = _random(seed);
         return randInt % 2 == 0 ? Group.Control : Group.Treatment;
@@ -104,21 +129,21 @@ contract DoubleBlindStudy {
     // order a treatment kit -- real or placebo -- 
     // based on the nature of the patient. pay out of the pot 
     //
-    function orderTreatmentKit () public {}
+    function orderTreatmentKit () public requireActive {}
     
     //
     // records administration of a treatment kit to a patient
     //
-    function administerTreatment () public {}
+    function administerTreatment () public requireActive {}
     
     //
     // records status of a patient following treatment administration
     // part of continuous self-assesment
     //
-    function reportStatus () public {}
+    function reportStatus () public requireActive {}
     
     // 
-    // automatically fired at the end of the study (on endDate)
+    // fired at the end of the study (on or after endDate)
     // 
     function _concludeStudy () private {}
     
