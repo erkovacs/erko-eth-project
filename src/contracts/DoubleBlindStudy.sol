@@ -62,11 +62,27 @@ contract DoubleBlindStudy {
     //
     // startDate and duration are specified in seconds
     //
-    constructor (address payable _pot, uint256 _startDate, uint256 _duration) {
+    /* constructor (address payable _pot, uint256 _startDate, uint256 _duration) {
         pot = _pot;
         duration = _duration;
         startDate = _startDate;
         endDate = startDate + _duration;
+        
+        patientCount = 0;
+        treatmentAdministrationReportCount = 0;
+        statusReportCount = 0;
+        
+        // TODO:: deal with the logic here
+        active = true;
+    }*/
+
+
+    // temp constructor while developing. switch to real one when done!
+    constructor () {
+        pot = msg.sender;
+        duration = 60 * 60 * 24;
+        startDate = block.timestamp;
+        endDate = startDate + duration;
         
         patientCount = 0;
         treatmentAdministrationReportCount = 0;
