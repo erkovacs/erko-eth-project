@@ -72,6 +72,7 @@ contract DoubleBlindStudy {
         treatmentAdministrationReportCount = 0;
         statusReportCount = 0;
         
+        // TODO:: deal with the logic here
         active = true;
     }
     
