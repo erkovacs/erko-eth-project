@@ -62,7 +62,7 @@ contract DoubleBlindStudy {
     //
     // startDate and duration are specified in seconds
     //
-    constructor (address payable _pot, uint256 _startDate, uint256 _duration) {
+    /*constructor (address payable _pot, uint256 _startDate, uint256 _duration) {
         pot = _pot;
         duration = _duration;
         startDate = _startDate;
@@ -73,6 +73,22 @@ contract DoubleBlindStudy {
         statusReportCount = 0;
         
         // TODO:: deal with the logic here
+        active = true;
+    }*/
+
+    //
+    // TODO:: remove after debugging
+    //
+    constructor () {
+        pot = msg.sender;
+        duration = 60 * 60 * 24;
+        startDate = block.timestamp;
+        endDate = startDate + duration;
+        
+        patientCount = 0;
+        treatmentAdministrationReportCount = 0;
+        statusReportCount = 0;
+        
         active = true;
     }
     
@@ -111,7 +127,7 @@ contract DoubleBlindStudy {
     // 
     // assign patient to one of two groups - treatment or control
     //
-    function _assignToGroup () private returns (Group) {
+    function _assignToGroup () private view returns (Group) {
         uint seed = patientCount + treatmentAdministrationReportCount + statusReportCount;
         uint randInt = _random(seed);
         return randInt % 2 == 0 ? Group.Control : Group.Treatment;
