@@ -92,7 +92,7 @@ class App extends Component {
 
   render() {
     return (
-      <div className="">
+      <div>
         <Navbar bg="dark" variant="dark">
           <Navbar.Brand href="#">
           <img src={logo} className="App-logo" alt="logo" height="32"/>{' '}
@@ -144,6 +144,11 @@ class App extends Component {
             </main>
           </div>
         </div>
+        <footer class="page-footer font-small blue pt-4">
+          <div class="footer-copyright text-center py-3">© 2020 Copyright: 
+            <a href="#">{`  ${TITLE}`}</a>
+          </div>
+        </footer>
       </div>
     );
   }
