@@ -60,8 +60,10 @@ class App extends Component {
     }
   }
 
-  async register () {
-    throw new Error('Not implemented!');
+  async enroll (params) {
+    // TODO:: validate, then commit to blockchain
+    const json = JSON.stringify(params);
+    alert(json);
   }
 
   async order () {
@@ -123,7 +125,10 @@ class App extends Component {
                 this.state.isMetamaskConnected ?
                   <Tabs defaultActiveKey={this.state.isPatientEnrolled ? 'Profile' : 'Enroll'} id="uncontrolled-tab-example">
                     <Tab eventKey="Enroll" title="Enroll" disabled={this.state.isPatientEnrolled}>
-                      <EnrollForm/>
+                      <EnrollForm 
+                        data={this.state} 
+                        onSubmit={ params => this.enroll(params) }
+                      />
                     </Tab>
                     <Tab eventKey="Profile" title="Profile" disabled={!this.state.isPatientEnrolled}>
                       <Profile/>
@@ -144,9 +149,9 @@ class App extends Component {
             </main>
           </div>
         </div>
-        <footer class="page-footer font-small blue pt-4">
-          <div class="footer-copyright text-center py-3">© 2020 Copyright: 
-            <a href="#">{`  ${TITLE}`}</a>
+        <footer className="page-footer font-small blue pt-4">
+          <div className="footer-copyright text-center py-3">© 2020 Copyright: 
+            <a href="#">{` ${TITLE}`}</a>
           </div>
         </footer>
       </div>
