@@ -1,5 +1,5 @@
 import { Tabs, Tab, Navbar, Button } from 'react-bootstrap'
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState, useRef } from 'react';
 import EnrollForm from './EnrollForm';
 import Profile from './Profile';
 import Order from './Order';
@@ -37,6 +37,10 @@ const DoubleBlindStudySupportApp = props => {
     throw new Error('Not implemented!');
   }
 
+  const goToProfileTab = e => {
+    e.preventDefault();
+  }
+
   return (
       <div>
         <Navbar bg="dark" variant="dark">
@@ -50,7 +54,7 @@ const DoubleBlindStudySupportApp = props => {
               { 
               state.hasMetamask ? 
                 state.isMetamaskConnected ? 
-                <div>Connected with account: <a href="#profile">{state.account}</a></div> : 
+                <div>Connected with account: <a href="#" onClick={e => goToProfileTab(e)}>{state.account}</a></div> : 
                 <div><a href="#" onClick={() => connectMetamask()}>Please connect with MetaMask</a></div> :
               <div>Please connect with <a href="https://metamask.io/">MetaMask</a></div>
               } 
