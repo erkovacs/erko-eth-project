@@ -50,6 +50,10 @@ export const Web3Provider = props => {
           isMetamaskConnected = true;
         }
 
+        // Check if we are enrolled
+        const isPatientEnrolled = 
+          await study.methods.isPatientEnrolled(account).call();
+
         setState({
           hasMetamask: true,
           web3 : web3,
@@ -57,6 +61,7 @@ export const Web3Provider = props => {
           study: study,
           account: account,
           isMetamaskConnected: isMetamaskConnected,
+          isPatientEnrolled: isPatientEnrolled
         });
       } catch (e) {
         setState({

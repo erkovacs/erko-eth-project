@@ -116,10 +116,19 @@ contract DoubleBlindStudy {
     
     // business logic
     
+    function isPatientEnrolled (address payable _address) public requireActive view returns (bool) {
+        for (uint i = 1; i < patientCount + 1; i++) {
+            if (_address == patients[i]._address) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
     //
     // add a patient to the study
     //
-    function registerPatient (address payable _address, string memory _data) public requireActive {
+    function enroll (address payable _address, string memory _data) public requireActive {
         patientCount++;
         patients[patientCount] = Patient(patientCount, _address, _assignToGroup(), _data, block.timestamp);
     }
@@ -146,12 +155,12 @@ contract DoubleBlindStudy {
     // order a treatment kit -- real or placebo -- 
     // based on the nature of the patient. pay out of the pot 
     //
-    function orderTreatmentKit () public requireActive {}
+    function order () public requireActive {}
     
     //
     // records administration of a treatment kit to a patient
     //
-    function administerTreatment () public requireActive {}
+    function reportTreatmentAdministration () public requireActive {}
     
     //
     // records status of a patient following treatment administration

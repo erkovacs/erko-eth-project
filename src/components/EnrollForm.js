@@ -69,9 +69,19 @@ const EnrollForm = props => {
   }
 
   const enroll = async fields => {
-    console.log(fields);
-    // TODO:: submit, interact with smart contract
-  }
+    try {
+      await data.study.methods.enroll(fields.account.value, JSON.stringify(fields)).call();
+      const response = await data.study.methods.isPatientEnrolled(fields.account.value).call();
+      if (response) {
+        // TODO:: we have managed to enroll! deal with it
+        console.log('Success!');
+      } else {
+        console.error('Failure!');
+      }
+    } catch (e) {
+      console.error(e.message);
+    }
+  } 
 
   return (
     <div>
