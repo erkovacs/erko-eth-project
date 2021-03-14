@@ -7,6 +7,8 @@ contract DoubleBlindStudy {
     uint256 private endDate;
     uint256 private duration;
     
+    // TODO:: change to mapping string => Patient
+    // key is keccak(address)
     uint256 private patientCount;
     mapping (uint256 => Patient) private patients;
     
@@ -117,6 +119,8 @@ contract DoubleBlindStudy {
     // business logic
     
     function isPatientEnrolled (address payable _address) public requireActive view returns (bool) {
+        // TODO:: change to retrieval from hash map
+        // key is keccak(address)
         for (uint i = 1; i < patientCount + 1; i++) {
             if (_address == patients[i]._address) {
                 return true;
@@ -131,6 +135,7 @@ contract DoubleBlindStudy {
     function enroll (address payable _address, string memory _data) public requireActive {
         patientCount++;
         patients[patientCount] = Patient(patientCount, _address, _assignToGroup(), _data, block.timestamp);
+        // TODO:: change api to return keccak(address)
     }
     
     // 

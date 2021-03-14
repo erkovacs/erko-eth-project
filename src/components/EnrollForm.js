@@ -70,11 +70,12 @@ const EnrollForm = props => {
 
   const enroll = async fields => {
     try {
-      await data.study.methods.enroll(fields.account.value, JSON.stringify(fields)).call();
+      const patientId = await data.study.methods.enroll(fields.account.value, JSON.stringify(fields)).call();
       const response = await data.study.methods.isPatientEnrolled(fields.account.value).call();
       if (response) {
+        // patientId
         // TODO:: we have managed to enroll! deal with it
-        console.log('Success!');
+        console.log('Success! ' + patientId);
       } else {
         console.error('Failure!');
       }

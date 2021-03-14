@@ -42,13 +42,13 @@ export const Web3Provider = props => {
         const { abi, networks } = DoubleBlindStudy;
         const address = networks[networkId] ? networks[networkId].address : null;
 
-        const study = new web3.eth.Contract(abi, address);
-
         // Make sure we have a main account
         if (typeof accounts[0] !== 'undefined') {
           account = accounts[0];
           isMetamaskConnected = true;
         }
+
+        const study = new web3.eth.Contract(abi, address);
 
         // Check if we are enrolled
         const isPatientEnrolled = 
