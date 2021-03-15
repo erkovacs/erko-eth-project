@@ -1,45 +1,22 @@
 import { Tabs, Tab, Navbar, Button } from 'react-bootstrap'
-import React, { useContext, useEffect, useState, useRef } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import EnrollForm from './EnrollForm';
 import Profile from './Profile';
 import Order from './Order';
 import ReportForm from './ReportForm';
 import ClaimReward from './ClaimReward';
 import { Web3Context } from './Web3Context';
+import { TITLE } from '../constants';
 import logo from '../logo.png';
 import './App.css';
 
 const DoubleBlindStudySupportApp = props => {
-  const { data, connectMetamask } = useContext(Web3Context);
+  const { ctxState, connectMetamask } = useContext(Web3Context);
   const [state, setState] = useState({});
 
   useEffect(() => {
-    setState(data);
-  }, [data.hasMetamask, data.isMetamaskConnected]);
-
-  const TITLE = 'Double Blind Study Support App';
-
-  const enroll = async (params) => {
-    // TODO:: validate, then commit to blockchain
-    const json = JSON.stringify(params);
-    alert(json);
-  }
-
-  const order = async () => {
-    throw new Error('Not implemented!');
-  }
-
-  const reportAdministration = async () => {
-    throw new Error('Not implemented!');
-  }
-
-  const reportStatus = async () => {
-    throw new Error('Not implemented!');
-  }
-
-  const goToProfileTab = e => {
-    e.preventDefault();
-  }
+    setState(ctxState);
+  }, [ctxState.hasMetamask, ctxState.isMetamaskConnected]);
 
   return (
       <div>
@@ -54,7 +31,7 @@ const DoubleBlindStudySupportApp = props => {
               { 
               state.hasMetamask ? 
                 state.isMetamaskConnected ? 
-                <div>Connected with account: <a href="#" onClick={e => goToProfileTab(e)}>{state.account}</a></div> : 
+                <div>Connected with account: <a href="#" onClick={e => null}>{state.account}</a></div> : 
                 <div><a href="#" onClick={() => connectMetamask()}>Please connect with MetaMask</a></div> :
               <div>Please connect with <a href="https://metamask.io/">MetaMask</a></div>
               } 

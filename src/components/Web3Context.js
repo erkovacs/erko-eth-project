@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect } from 'react';
-import DoubleBlindStudy from '../abis/DoubleBlindStudy.json'
+import DoubleBlindStudy from '../abis/DoubleBlindStudy.json';
+import { Bytes32_NULL } from '../constants';
 import Web3 from 'web3';
 import './App.css';
 
@@ -48,11 +49,16 @@ export const Web3Provider = props => {
           isMetamaskConnected = true;
         }
 
-        const study = new web3.eth.Contract(abi, address);
+        const study = new web3.eth.Contract(abi, address, {
+          from: account
+        });
 
         // Check if we are enrolled
-        const isPatientEnrolled = 
-          await study.methods.isPatientEnrolled(account).call();
+        const patientId = await study.methods.isPatientEnrolled(account).call();
+        const isPatientEnrolled =  Bytes32_NULL !== patientId;
+
+        // TODO:: remove after debug is done
+        window.__contract = study.methods;
 
         setState({
           hasMetamask: true,
@@ -61,7 +67,8 @@ export const Web3Provider = props => {
           study: study,
           account: account,
           isMetamaskConnected: isMetamaskConnected,
-          isPatientEnrolled: isPatientEnrolled
+          isPatientEnrolled: isPatientEnrolled,
+          patientId: patientId
         });
       } catch (e) {
         setState({
@@ -81,5 +88,14 @@ export const Web3Provider = props => {
   const connectMetamask = async () => {
     await loadBlockchainData();
   }
-  return <Web3Context.Provider value={{ data: state, connectMetamask: connectMetamask }}>{props.children}</Web3Context.Provider>;
+
+  const setCtxState = async _state => {
+    console.log(_state);
+  }
+
+  return (<Web3Context.Provider value={{ 
+      ctxState: state, 
+      setCtxState: setCtxState,
+      connectMetamask: connectMetamask, 
+    }}>{props.children}</Web3Context.Provider>);
 }

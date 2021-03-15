@@ -1,5 +1,6 @@
 import { Alert, Button, Card, Form } from 'react-bootstrap'
 import React, { useState, useContext } from 'react';
+import { Bytes32_NULL } from '../constants';
 import { Web3Context } from './Web3Context';
 import './Form.css';
 
@@ -11,10 +12,10 @@ const GENDERS = [
 
 const EnrollForm = props => {
 
-  const { data } = useContext(Web3Context);
+  const { ctxState, setCtxState } = useContext(Web3Context);
   const [state, setState] = useState({
     fields: {
-      account: { value: data.account, isValid: null },
+      account: { value: ctxState.account, isValid: null },
       height: { value: '', isValid: null },
       weight: { value: '', isValid: null },
       age: { value: '', isValid: null },
@@ -35,13 +36,14 @@ const EnrollForm = props => {
       case 'height':
       case 'weight':
       case 'age':
-        return /[0-9\.]/gi.test(value);
+        return /[0-9.]/gi.test(value);
       case 'gender':
         return GENDERS.indexOf(value) > -1;
       case 'account':
         return /^0x.{40}/gi.test(value);
+      default:
+        return false;
     }
-    return true;
   }
 
   const validateForm = () => {
@@ -70,14 +72,12 @@ const EnrollForm = props => {
 
   const enroll = async fields => {
     try {
-      const patientId = await data.study.methods.enroll(fields.account.value, JSON.stringify(fields)).call();
-      const response = await data.study.methods.isPatientEnrolled(fields.account.value).call();
-      if (response) {
-        // patientId
-        // TODO:: we have managed to enroll! deal with it
-        console.log('Success! ' + patientId);
+      await ctxState.study.methods.enroll(JSON.stringify(fields)).send();
+      const patientId = await ctxState.study.methods.isPatientEnrolled(fields.account.value).call();
+      if (Bytes32_NULL !== patientId) {
+        setCtxState({ isPatientEnrolled: true, patientId: patientId });
       } else {
-        console.error('Failure!');
+        console.error(`Error: Bad patient ID returned: ${patientId}`);
       }
     } catch (e) {
       console.error(e.message);
