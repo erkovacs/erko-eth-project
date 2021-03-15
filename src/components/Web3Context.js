@@ -90,7 +90,7 @@ export const Web3Provider = props => {
   }
 
   const setCtxState = async _state => {
-    console.log(_state);
+    setState(_state);
   }
 
   return (<Web3Context.Provider value={{ 

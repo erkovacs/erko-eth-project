@@ -75,8 +75,10 @@ const EnrollForm = props => {
       await ctxState.study.methods.enroll(JSON.stringify(fields)).send();
       const patientId = await ctxState.study.methods.isPatientEnrolled(fields.account.value).call();
       if (Bytes32_NULL !== patientId) {
+        // TODO:: show success toast
         setCtxState({ isPatientEnrolled: true, patientId: patientId });
       } else {
+        // TODO:: show danger toast for errors
         console.error(`Error: Bad patient ID returned: ${patientId}`);
       }
     } catch (e) {

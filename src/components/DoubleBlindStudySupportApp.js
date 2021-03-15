@@ -16,12 +16,12 @@ const DoubleBlindStudySupportApp = props => {
 
   useEffect(() => {
     setState(ctxState);
-  }, [ctxState.hasMetamask, ctxState.isMetamaskConnected]);
+  }, [ctxState, ctxState.hasMetamask, ctxState.isMetamaskConnected]);
 
   return (
       <div>
         <Navbar bg="dark" variant="dark">
-          <Navbar.Brand href="#">
+          <Navbar.Brand href="/">
           <img src={logo} className="App-logo" alt="logo" height="32"/>{' '}
             {TITLE}
           </Navbar.Brand>
@@ -31,8 +31,8 @@ const DoubleBlindStudySupportApp = props => {
               { 
               state.hasMetamask ? 
                 state.isMetamaskConnected ? 
-                <div>Connected with account: <a href="#" onClick={e => null}>{state.account}</a></div> : 
-                <div><a href="#" onClick={() => connectMetamask()}>Please connect with MetaMask</a></div> :
+                <div>Connected with account: <a href="/#" onClick={e => null}>{state.account}</a></div> : 
+                <div><a href="/#" onClick={() => connectMetamask()}>Please connect with MetaMask</a></div> :
               <div>Please connect with <a href="https://metamask.io/">MetaMask</a></div>
               } 
             </Navbar.Text>
