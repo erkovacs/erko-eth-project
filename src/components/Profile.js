@@ -1,9 +1,9 @@
-import React, { Component } from 'react';
+import React from 'react';
 
-class Profile extends Component {
-    render () {
-        return <h1>Patient Profile</h1>
-    }
+const Profile = props => {
+    return (
+        <h4>Patient Profile</h4>
+    );
 }
 
 export default Profile;
