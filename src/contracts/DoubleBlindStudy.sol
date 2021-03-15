@@ -3,18 +3,18 @@ pragma solidity ^0.7.4;
 contract DoubleBlindStudy {
     
     address payable private pot;
-    uint256 private startDate;
-    uint256 private endDate;
-    uint256 private duration;
+    uint private startDate;
+    uint private endDate;
+    uint private duration;
     
-    uint256 private patientCount;
-    mapping (uint256 => Patient) private patients;
+    uint private patientCount;
+    mapping (bytes32 => Patient) private patients;
     
-    uint256 private treatmentAdministrationReportCount;
-    mapping (uint256 => TreatmentAdministrationReport) private treatmentAdministrationReports;
+    uint private treatmentAdministrationReportCount;
+    mapping (uint => TreatmentAdministrationReport) private treatmentAdministrationReports;
     
-    uint256 private statusReportCount;
-    mapping (uint256 => StatusReport) private statusReports;
+    uint private statusReportCount;
+    mapping (uint => StatusReport) private statusReports;
     
     bool public active;
     
@@ -29,23 +29,23 @@ contract DoubleBlindStudy {
     }
     
     struct Patient {
-        uint256 _id;
-        address payable _address;
+        uint _id;
+        bytes32 _hash;
         Group _group;
         string _data;
-        uint256 _registeredOn;
+        uint _registeredOn;
     }
     
     struct TreatmentAdministrationReport {
-        uint256 _patientId;
+        uint _patientId;
         string _data;
-        uint256 _administeredOn;
+        uint _administeredOn;
     }    
     
     struct StatusReport {
-        uint256 _patientId;
+        uint _patientId;
         string _data;
-        uint256 _reportedOn;
+        uint _reportedOn;
     }
     
     //
@@ -82,18 +82,19 @@ contract DoubleBlindStudy {
     constructor () {
         pot = msg.sender;
         duration = 60 * 60 * 24;
-        startDate = block.timestamp;
-        endDate = startDate + duration;
+        uint ts = block.timestamp;
+        startDate = ts;
+        endDate = ts + duration;
         
         patientCount = 0;
         treatmentAdministrationReportCount = 0;
         statusReportCount = 0;
-        
+
         active = true;
     }
     
     // helpers
-    
+
     //
     // returns a pseudorandom number
     //
@@ -116,12 +117,21 @@ contract DoubleBlindStudy {
     
     // business logic
     
+    function isPatientEnrolled (address payable _address) public view requireActive returns (bytes32) {
+        bytes32 _hash = keccak256(abi.encodePacked(_address));
+        return patients[_hash]._hash;
+    }
+    
     //
     // add a patient to the study
     //
-    function registerPatient (address payable _address, string memory _data) public requireActive {
+    function enroll (string memory _data) public requireActive returns (bytes32) {
         patientCount++;
-        patients[patientCount] = Patient(patientCount, _address, _assignToGroup(), _data, block.timestamp);
+        address payable _address = msg.sender;
+        bytes32 _hash = keccak256(abi.encodePacked(_address));
+        uint ts = block.timestamp;
+        patients[_hash] = Patient(patientCount, _hash, _assignToGroup(), _data, ts);
+        return _hash;
     }
     
     // 
@@ -146,12 +156,12 @@ contract DoubleBlindStudy {
     // order a treatment kit -- real or placebo -- 
     // based on the nature of the patient. pay out of the pot 
     //
-    function orderTreatmentKit () public requireActive {}
+    function order () public requireActive {}
     
     //
     // records administration of a treatment kit to a patient
     //
-    function administerTreatment () public requireActive {}
+    function reportTreatmentAdministration () public requireActive {}
     
     //
     // records status of a patient following treatment administration
