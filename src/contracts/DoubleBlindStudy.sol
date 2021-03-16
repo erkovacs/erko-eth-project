@@ -33,13 +33,13 @@ contract DoubleBlindStudy {
         bytes32 _hash;
         Group _group;
         string _data;
-        uint _registeredOn;
+        uint _enrolledOn;
     }
     
     struct TreatmentAdministrationReport {
         uint _patientId;
         string _data;
-        uint _administeredOn;
+        uint _reportedOn;
     }    
     
     struct StatusReport {
@@ -114,7 +114,7 @@ contract DoubleBlindStudy {
             _concludeStudy();
         }
     }
-    
+
     // business logic
     
     function isPatientEnrolled (address payable _address) public view requireActive returns (bytes32) {
@@ -122,6 +122,12 @@ contract DoubleBlindStudy {
         return patients[_hash]._hash;
     }
     
+    function getPatientData (address payable _address) public view requireActive returns (uint, bytes32, string memory, uint) {
+        bytes32 _hash = keccak256(abi.encodePacked(_address));
+        Patient memory _patient = patients[_hash];
+        return (_patient._id, _patient._hash, _patient._data, _patient._enrolledOn);
+    }
+
     //
     // add a patient to the study
     //
