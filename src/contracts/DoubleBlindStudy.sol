@@ -33,13 +33,13 @@ contract DoubleBlindStudy {
         bytes32 _hash;
         Group _group;
         string _data;
-        uint _registeredOn;
+        uint _enrolledOn;
     }
     
     struct TreatmentAdministrationReport {
         uint _patientId;
         string _data;
-        uint _administeredOn;
+        uint _reportedOn;
     }    
     
     struct StatusReport {
@@ -114,7 +114,7 @@ contract DoubleBlindStudy {
             _concludeStudy();
         }
     }
-    
+
     // business logic
     
     function isPatientEnrolled (address payable _address) public view requireActive returns (bytes32) {
