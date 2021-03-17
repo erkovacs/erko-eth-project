@@ -10,11 +10,8 @@ contract DoubleBlindStudy {
     uint private patientCount;
     mapping (bytes32 => Patient) private patients;
     
-    uint private treatmentAdministrationReportCount;
-    mapping (uint => TreatmentAdministrationReport) private treatmentAdministrationReports;
-    
-    uint private statusReportCount;
-    mapping (uint => StatusReport) private statusReports;
+    uint private reportCount;
+    mapping (uint => Report) private reports;
     
     bool public active;
     
@@ -28,6 +25,11 @@ contract DoubleBlindStudy {
         Control
     }
     
+    enum ReportType {
+        TreatmentAdministration,
+        Status
+    }
+
     struct Patient {
         uint _id;
         bytes32 _hash;
@@ -36,14 +38,15 @@ contract DoubleBlindStudy {
         uint _enrolledOn;
     }
     
-    struct TreatmentAdministrationReport {
-        uint _patientId;
-        string _data;
-        uint _reportedOn;
-    }    
+    struct Order {
+        uint _id;
+        bytes32 _patientId;
+    }
     
-    struct StatusReport {
-        uint _patientId;
+    struct Report {
+        uint _id;
+        ReportType _reportType;
+        bytes32 _patientId;
         string _data;
         uint _reportedOn;
     }
@@ -69,8 +72,7 @@ contract DoubleBlindStudy {
         endDate = startDate + _duration;
         
         patientCount = 0;
-        treatmentAdministrationReportCount = 0;
-        statusReportCount = 0;
+        reportCount = 0;
         
         // TODO:: deal with the logic here
         active = true;
@@ -87,8 +89,7 @@ contract DoubleBlindStudy {
         endDate = ts + duration;
         
         patientCount = 0;
-        treatmentAdministrationReportCount = 0;
-        statusReportCount = 0;
+        reportCount = 0;
 
         active = true;
     }
@@ -117,11 +118,17 @@ contract DoubleBlindStudy {
 
     // business logic
     
+    // 
+    // Returns whether the specified patient is enrolled
+    //
     function isPatientEnrolled (address payable _address) public view requireActive returns (bytes32) {
         bytes32 _hash = keccak256(abi.encodePacked(_address));
         return patients[_hash]._hash;
     }
     
+    //
+    // Returns patient data
+    //
     function getPatientData (address payable _address) public view requireActive returns (uint, bytes32, string memory, uint) {
         bytes32 _hash = keccak256(abi.encodePacked(_address));
         Patient memory _patient = patients[_hash];
@@ -144,7 +151,7 @@ contract DoubleBlindStudy {
     // assign patient to one of two groups - treatment or control
     //
     function _assignToGroup () private view returns (Group) {
-        uint seed = patientCount + treatmentAdministrationReportCount + statusReportCount;
+        uint seed = patientCount + reportCount;
         uint randInt = _random(seed);
         return randInt % 2 == 0 ? Group.Control : Group.Treatment;
     }
@@ -160,20 +167,35 @@ contract DoubleBlindStudy {
     
     //
     // order a treatment kit -- real or placebo -- 
-    // based on the nature of the patient. pay out of the pot 
+    // based on the nature of the patient. pay out of the pot?
     //
     function order () public requireActive {}
     
+    // 
+    // Add a report of specified type and with specified data
+    //
+    function _addReport(ReportType _type, string memory _data) private {
+        reportCount++;
+        address payable _address = msg.sender;
+        bytes32 _hash = keccak256(abi.encodePacked(_address));
+        uint ts = block.timestamp;
+        reports[reportCount] = Report(reportCount, _type, _hash, _data, ts);
+    }
+
     //
     // records administration of a treatment kit to a patient
     //
-    function reportTreatmentAdministration () public requireActive {}
+    function reportTreatmentAdministration (string memory _data) public requireActive {
+        _addReport(ReportType.TreatmentAdministration, _data);
+    }
     
     //
     // records status of a patient following treatment administration
     // part of continuous self-assesment
     //
-    function reportStatus () public requireActive {}
+    function reportStatus (string memory _data) public requireActive {
+        _addReport(ReportType.Status, _data);
+    }
     
     // 
     // fired at the end of the study (on or after endDate)

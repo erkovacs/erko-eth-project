@@ -11,11 +11,11 @@ export const GENDERS = [
      label: '-- None --'
    },
    TREATMENT_ADMINISTRATION_REPORT: {
-     value: 'treatment_administration_report',
+     value: 'TREATMENT_ADMINISTRATION_REPORT',
      label: 'Treatment Administration Report'
    },
    STATUS_REPORT: {
-     value: 'status_report',
+     value: 'STATUS_REPORT',
      label: 'Status Report (self-assessment)'
    }
  };

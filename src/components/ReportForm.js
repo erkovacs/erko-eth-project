@@ -1,25 +1,38 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { Alert, Button, Card, Form } from 'react-bootstrap';
+import { Web3Context } from './Web3Context';
+import DatePickerInput from './DatePickerInput';
 import { REPORT_TYPES } from '../constants';
 
 const ReportForm = () => {
 
+  const { ctxState } = useContext(Web3Context);
+
   const [state, setState] = useState({
     fields: {
-      reportType: { value: '', isValid: null }
+      reportType: { value: '', isValid: null },
+      dosage: { value: '', isValid: null },
+      timeOfAdministration: { value: '', isValid: null },
     },
     error: ''
   });
 
   const handleChange = (field, e) => {
     const fields = state.fields;
-    fields[field].value = e.target.value;
-    fields[field].isValid = validateField(field, e.target.value);
+    let value = e.target.value;
+    fields[field].value = value;
+    fields[field].isValid = validateField(field, value);
     setState({ fields: fields });
   }
 
   const validateField = (field, value) => {
     switch (field) {
+      case 'dosage':
+        return /[0-9.]/gi.test(value);
+      case 'timeOfAdministration':
+        return null != value && !isNaN(value);
+      case 'reportType':
+        return typeof REPORT_TYPES[value] !== 'undefined';
       default:
         return false;
     }
@@ -39,10 +52,17 @@ const ReportForm = () => {
     return valid;
   }
 
-  const onSubmit = e => {
+  const onSubmit = async e => {
     e.preventDefault();
     if (validateForm()) {
-      // TODO:: send report
+      let payload = JSON.stringify(state.fields);
+      let result = null;
+      if (REPORT_TYPES.STATUS_REPORT.value === state.fields.reportType.value) {
+        result = await ctxState.study.methods.reportStatus().send();
+      } else if (REPORT_TYPES.TREATMENT_ADMINISTRATION_REPORT.value === state.fields.reportType.value) {
+        result = await ctxState.study.methods.reportTreatmentAdministration().send();
+      }
+      console.log(result);
     } else {
       const fields = state.fields;
       setState({ error: 'Check the form for errors!', fields: fields });
@@ -75,24 +95,51 @@ const ReportForm = () => {
                 }
               </Form.Control>
             </Form.Group>
+            
+            <Form.Text className="text-muted">
+                Please use metric units
+            </Form.Text>
 
-            {REPORT_TYPES.TREATMENT_ADMINISTRATION_REPORT.value === state.fields.reportType.value ? 
-              <Form.Text className="card-title h5">
-                {REPORT_TYPES.TREATMENT_ADMINISTRATION_REPORT.label}
-              </Form.Text> :
+            {
+            REPORT_TYPES.TREATMENT_ADMINISTRATION_REPORT.value === state.fields.reportType.value ? 
+              <div>
+                <Form.Text className="card-title h5">
+                  {REPORT_TYPES.TREATMENT_ADMINISTRATION_REPORT.label}
+                </Form.Text>
+                <Form.Group controlId="dosage">
+                <Form.Label>Dosage (mg): </Form.Label>
+                <Form.Control 
+                  isInvalid={state.fields.dosage.isValid === false} 
+                  isValid={state.fields.dosage.isValid === true} 
+                  type="number" 
+                  value={state.fields.dosage.value} 
+                  onChange={e => handleChange('dosage', e)} />
+              </Form.Group>
+              <Form.Group controlId="timeOfAdministration">
+                <Form.Label>Date/Time of administration: </Form.Label><br></br> 
+                <DatePickerInput 
+                  /* Hacks beget hacks... */
+                  onChange={datetime => handleChange('timeOfAdministration', { target: { value: datetime } })}
+                  isInvalid={state.fields.timeOfAdministration.isValid === false} 
+                  isValid={state.fields.timeOfAdministration.isValid === true} 
+                />
+              </Form.Group>
+              </div> :
               ''
             }
 
-            {REPORT_TYPES.STATUS_REPORT.value === state.fields.reportType.value ? 
+            {
+            REPORT_TYPES.STATUS_REPORT.value === state.fields.reportType.value ? 
               <Form.Text className="card-title h5">
                 {REPORT_TYPES.STATUS_REPORT.label}
               </Form.Text> :
               ''
             }
 
-            {REPORT_TYPES.NONE.value !== state.fields.reportType.value ? 
+            {
+            REPORT_TYPES.NONE.value !== state.fields.reportType.value ? 
               <Button variant="dark" type="submit" onClick={e => onSubmit(e)}>
-                Submit Report
+                Submit
               </Button> : ''
             }
           </Form>
