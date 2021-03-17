@@ -8,21 +8,45 @@ const ReportForm = () => {
 
   const { ctxState } = useContext(Web3Context);
 
-  const [state, setState] = useState({
+  // Global form state -- which form to show
+  const [reportType, setReportType] = useState({
+    value: '', 
+    isValid: null
+  });
+
+  const [_error, _setError] = useState(null);
+  const [success, setSuccess] = useState(null);
+  
+  // State for Treatment Administration Report
+  const [formStateTreatment, setFormStateTreatment] = useState({
     fields: {
-      reportType: { value: '', isValid: null },
       dosage: { value: '', isValid: null },
       timeOfAdministration: { value: '', isValid: null },
-    },
-    error: ''
+    }
+  });
+
+  // State for Status Return
+  // TODO:: create the second form too
+  const [formStateStatus, setFormStateStatus] = useState({
+    fields: {
+    }
   });
 
   const handleChange = (field, e) => {
-    const fields = state.fields;
     let value = e.target.value;
-    fields[field].value = value;
-    fields[field].isValid = validateField(field, value);
-    setState({ fields: fields });
+    let isValid = validateField(field, value);
+    if ('reportType' === field) {
+      setReportType({
+        value,
+        isValid
+      });
+    } else {
+      const fields = formStateTreatment.fields;
+      fields[field].value = value;
+      fields[field].isValid = isValid;
+      setFormStateTreatment({ fields });
+    }
+    
   }
 
   const validateField = (field, value) => {
@@ -40,7 +64,7 @@ const ReportForm = () => {
 
   const validateForm = () => {
     let valid = true;
-    const fields = state.fields;
+    const fields = formStateTreatment.fields;
     const keys = Object.keys(fields);
     for (let field of keys) {
       // simulate onChange with this hack
@@ -55,17 +79,35 @@ const ReportForm = () => {
   const onSubmit = async e => {
     e.preventDefault();
     if (validateForm()) {
-      let payload = JSON.stringify(state.fields);
-      let result = null;
-      if (REPORT_TYPES.STATUS_REPORT.value === state.fields.reportType.value) {
-        result = await ctxState.study.methods.reportStatus().send();
-      } else if (REPORT_TYPES.TREATMENT_ADMINISTRATION_REPORT.value === state.fields.reportType.value) {
-        result = await ctxState.study.methods.reportTreatmentAdministration().send();
+      let payload = JSON.stringify(formStateTreatment.fields);
+      let method = null;
+      if (REPORT_TYPES.STATUS_REPORT.value === reportType.value) {
+        method = 'reportStatus';
+      } else if (REPORT_TYPES.TREATMENT_ADMINISTRATION_REPORT.value === reportType.value) {
+        method = 'reportTreatmentAdministration';
       }
-      console.log(result);
+      try {
+        let result = await ctxState.study.methods[method](payload).send();
+        if (result.status) {
+          // Reset
+          setReportType({ value: '', isValid: null });
+          setFormStateTreatment({ 
+            fields : {
+              dosage: { value: '', isValid: null },
+              timeOfAdministration: { value: '', isValid: null }
+            }
+          });
+          setSuccess('Successfuly submitted report!');
+          setTimeout(() => setSuccess(null), 6000);
+        } else {
+          throw new Error(`Error in transaction: ${JSON.stringify(result)}`);
+        }
+      } catch (e) {
+        console.error(e.message);
+        _setError(`Error: ${e.message}`);
+      }
     } else {
-      const fields = state.fields;
-      setState({ error: 'Check the form for errors!', fields: fields });
+      _setError('Check the form for errors!');
     }
   }
 
@@ -77,19 +119,22 @@ const ReportForm = () => {
           <Card.Title>Report Treatment Administration or Status</Card.Title>
           <Form>
             <br></br>
-            {state.error ? <Alert variant="danger">
-              {state.error}
+            {_error ? <Alert variant="danger">
+              {_error}
+            </Alert> : ''}
+            {success ? <Alert variant="success">
+              {success}
             </Alert> : ''}
             <Form.Group controlId="reportType">
               <Form.Label>Report type</Form.Label>
               <Form.Control as="select" onChange={e => handleChange('reportType', e)}>
                 { 
                   Object.keys(REPORT_TYPES).map(
-                    (reportType, i) => {
+                    (_reportType, i) => {
                       return <option
                         key={i}
-                        value={ REPORT_TYPES[reportType].value }>
-                        { REPORT_TYPES[reportType].label }
+                        value={ REPORT_TYPES[_reportType].value }>
+                        { REPORT_TYPES[_reportType].label }
                       </option>;
                     }) 
                 }
@@ -101,7 +146,7 @@ const ReportForm = () => {
             </Form.Text>
 
             {
-            REPORT_TYPES.TREATMENT_ADMINISTRATION_REPORT.value === state.fields.reportType.value ? 
+            REPORT_TYPES.TREATMENT_ADMINISTRATION_REPORT.value === reportType.value ? 
               <div>
                 <Form.Text className="card-title h5">
                   {REPORT_TYPES.TREATMENT_ADMINISTRATION_REPORT.label}
@@ -109,10 +154,10 @@ const ReportForm = () => {
                 <Form.Group controlId="dosage">
                 <Form.Label>Dosage (mg): </Form.Label>
                 <Form.Control 
-                  isInvalid={state.fields.dosage.isValid === false} 
-                  isValid={state.fields.dosage.isValid === true} 
+                  isInvalid={formStateTreatment.fields.dosage.isValid === false} 
+                  isValid={formStateTreatment.fields.dosage.isValid === true} 
                   type="number" 
-                  value={state.fields.dosage.value} 
+                  value={formStateTreatment.fields.dosage.value} 
                   onChange={e => handleChange('dosage', e)} />
               </Form.Group>
               <Form.Group controlId="timeOfAdministration">
@@ -120,8 +165,8 @@ const ReportForm = () => {
                 <DatePickerInput 
                   /* Hacks beget hacks... */
                   onChange={datetime => handleChange('timeOfAdministration', { target: { value: datetime } })}
-                  isInvalid={state.fields.timeOfAdministration.isValid === false} 
-                  isValid={state.fields.timeOfAdministration.isValid === true} 
+                  isInvalid={formStateTreatment.fields.timeOfAdministration.isValid === false} 
+                  isValid={formStateTreatment.fields.timeOfAdministration.isValid === true} 
                 />
               </Form.Group>
               </div> :
@@ -129,7 +174,7 @@ const ReportForm = () => {
             }
 
             {
-            REPORT_TYPES.STATUS_REPORT.value === state.fields.reportType.value ? 
+            REPORT_TYPES.STATUS_REPORT.value === reportType.value ? 
               <Form.Text className="card-title h5">
                 {REPORT_TYPES.STATUS_REPORT.label}
               </Form.Text> :
@@ -137,7 +182,7 @@ const ReportForm = () => {
             }
 
             {
-            REPORT_TYPES.NONE.value !== state.fields.reportType.value ? 
+            REPORT_TYPES.NONE.value !== reportType.value ? 
               <Button variant="dark" type="submit" onClick={e => onSubmit(e)}>
                 Submit
               </Button> : ''
