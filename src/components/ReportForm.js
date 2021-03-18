@@ -29,6 +29,12 @@ const ReportForm = () => {
   // TODO:: create the second form too
   const [formStateStatus, setFormStateStatus] = useState({
     fields: {
+      temperature: { value: '', label: 'Temperature (deg C)', isValid: null, type: 'number'},
+      heartRate: { value: '', label: 'Heart rate (bps)', isValid: null, type: 'number'},
+      bloodPressureHi: { value: '', label: 'Systolic blood pressure (mm Hg)', isValid: null, type: 'number'},
+      bloodPressureLo: { value: '', label: 'Dyastolic blood pressure (mm Hg)', isValid: null, type: 'number'},
+      bloodOxygenContent: { value: '', label: 'Blood oxygen content (SpO2, %)', isValid: null, type: 'number'},
+      notes: { value: '', label: 'Notes', isValid: null, type: 'text' }
     }
   });
 
@@ -41,22 +47,36 @@ const ReportForm = () => {
         isValid
       });
     } else {
-      const fields = formStateTreatment.fields;
+      let form, setter = null;
+      if (field in formStateTreatment.fields) {
+        form = formStateTreatment;
+        setter = setFormStateTreatment;
+      } else if (field in formStateStatus.fields) {
+        form = formStateStatus;
+        setter = setFormStateStatus;
+      }
+      const fields = form.fields;
       fields[field].value = value;
       fields[field].isValid = isValid;
-      setFormStateTreatment({ fields });
+      setter({ fields });
     }
-    
   }
 
   const validateField = (field, value) => {
     switch (field) {
       case 'dosage':
+      case 'temperature':
+      case 'heartRate':
+      case 'bloodPressureHi':
+      case 'bloodPressureLo':
+      case 'bloodOxygenContent':
         return /[0-9.]/gi.test(value);
       case 'timeOfAdministration':
         return null != value && !isNaN(value);
       case 'reportType':
         return typeof REPORT_TYPES[value] !== 'undefined';
+      case 'notes':
+        return value && value.length > 15;
       default:
         return false;
     }
@@ -64,7 +84,8 @@ const ReportForm = () => {
 
   const validateForm = () => {
     let valid = true;
-    const fields = formStateTreatment.fields;
+    const fields = REPORT_TYPES.STATUS_REPORT.value === reportType.value ? 
+      formStateStatus.fields : formStateTreatment.fields;
     const keys = Object.keys(fields);
     for (let field of keys) {
       // simulate onChange with this hack
@@ -79,13 +100,15 @@ const ReportForm = () => {
   const onSubmit = async e => {
     e.preventDefault();
     if (validateForm()) {
-      let payload = JSON.stringify(formStateTreatment.fields);
-      let method = null;
+      let form, method = null;
       if (REPORT_TYPES.STATUS_REPORT.value === reportType.value) {
+        form = formStateStatus;
         method = 'reportStatus';
       } else if (REPORT_TYPES.TREATMENT_ADMINISTRATION_REPORT.value === reportType.value) {
+        form = formStateTreatment;
         method = 'reportTreatmentAdministration';
       }
+      let payload = JSON.stringify(form.fields);
       try {
         let result = await ctxState.study.methods[method](payload).send();
         if (result.status) {
@@ -147,7 +170,7 @@ const ReportForm = () => {
 
             {
             REPORT_TYPES.TREATMENT_ADMINISTRATION_REPORT.value === reportType.value ? 
-              <div>
+              <React.Fragment>
                 <Form.Text className="card-title h5">
                   {REPORT_TYPES.TREATMENT_ADMINISTRATION_REPORT.label}
                 </Form.Text>
@@ -169,15 +192,31 @@ const ReportForm = () => {
                   isValid={formStateTreatment.fields.timeOfAdministration.isValid === true} 
                 />
               </Form.Group>
-              </div> :
+              </React.Fragment> :
               ''
             }
 
             {
             REPORT_TYPES.STATUS_REPORT.value === reportType.value ? 
-              <Form.Text className="card-title h5">
-                {REPORT_TYPES.STATUS_REPORT.label}
-              </Form.Text> :
+              <React.Fragment>
+                <Form.Text className="card-title h5">
+                  {REPORT_TYPES.STATUS_REPORT.label}
+                </Form.Text>
+                
+                { Object.keys(formStateStatus.fields).map(field => {
+                  return (
+                    <Form.Group controlId={field} key={`formStateStatus_${field}`}>
+                      <Form.Label>{formStateStatus.fields[field].label} :</Form.Label>
+                      <Form.Control 
+                        isInvalid={formStateStatus.fields[field].isValid === false} 
+                        isValid={formStateStatus.fields[field].isValid === true} 
+                        type={formStateStatus.fields[field].type} 
+                        value={formStateStatus.fields[field].value} 
+                        onChange={e => handleChange(field, e)} />
+                    </Form.Group>
+                  );
+                })}
+              </React.Fragment>:
               ''
             }
 
