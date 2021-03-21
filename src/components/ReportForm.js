@@ -39,14 +39,10 @@ const ReportForm = () => {
   };
 
   // State for Treatment Administration Report
-  const [formStateTreatment, setFormStateTreatment] = useState({
-    fields: DEF_FIELDS_FORM_STATE_TREATMENT
-  });
+  const [formStateTreatment, setFormStateTreatment] = useState(DEF_FIELDS_FORM_STATE_TREATMENT);
 
-  // State for Status Return
-  const [formStateStatus, setFormStateStatus] = useState({
-    fields: DEF_FIELDS_FORM_STATE_STATUS
-  });
+  // State for Status Report
+  const [formStateStatus, setFormStateStatus] = useState(DEF_FIELDS_FORM_STATE_STATUS);
 
   const handleChange = (field, e) => {
 
@@ -59,20 +55,22 @@ const ReportForm = () => {
         isValid
       });
     } else {
-      let form, setter = null;
-
-      if (field in formStateTreatment.fields) {
+     
+      let form, setter, fieldHandle = null;
+      
+      if (field in formStateTreatment) {
         form = formStateTreatment;
         setter = setFormStateTreatment;
-      } else if (field in formStateStatus.fields) {
+      } else if (field in formStateStatus) {
         form = formStateStatus;
         setter = setFormStateStatus;
-      } 
+      }
 
-      const fields = form.fields;
-      fields[field].value = value;
-      fields[field].isValid = isValid;
-      setter({ fields });
+      fieldHandle = form[field];
+      fieldHandle.isValid = isValid;
+      fieldHandle.value = value;
+      
+      setter({ ...form, [field]: fieldHandle });
     }
   }
 
@@ -88,13 +86,13 @@ const ReportForm = () => {
       case 'timeOfAdministration':
       case 'timeOfReport':
       case 'generalCondition':
-        return null != value && !isNaN(value);
+        return (value != null && !isNaN(value));
       case 'reportType':
         return typeof REPORT_TYPES[value] !== 'undefined';
       case 'notes':
-        return value != null && value.length > 15;
+        return (value != null && value.length > 15);
       case 'treatmentKitId':
-        return value != null && value.length > 0;
+        return (value != null && value.length > 0);
       default:
         return false;
     }
@@ -103,34 +101,35 @@ const ReportForm = () => {
   const validateForm = () => {
     let valid = true;
 
-    const fields = REPORT_TYPES.STATUS_REPORT.value === reportType.value ? 
-      formStateStatus.fields : formStateTreatment.fields;
+    const form = REPORT_TYPES.STATUS_REPORT.value === reportType.value ? 
+      formStateStatus : formStateTreatment;
 
-    const keys = Object.keys(fields);
+    const fields = Object.keys(form);
 
-    for (let field of keys) {
+    for (let field of fields) {
       // simulate onChange with this hack
-      handleChange(field, { target: { value: fields[field].value } });
-      if (!fields[field].isValid) {
+      handleChange(field, { target: { value: form[field].value } });
+      if (!form[field].isValid) {
         valid = false;
       }
     }
+
     return valid;
   }
 
   const getSliderColor = () => {
-    if (formStateStatus.fields.generalCondition.value < 33) return '#c82333';
-    if (formStateStatus.fields.generalCondition.value >= 33 && formStateStatus.fields.generalCondition.value < 66) return '#ffc107';
-    if (formStateStatus.fields.generalCondition.value >= 66) return '#28a745';
+    if (formStateStatus.generalCondition.value < 33) return '#c82333';
+    if (formStateStatus.generalCondition.value >= 33 && formStateStatus.generalCondition.value < 66) return '#ffc107';
+    if (formStateStatus.generalCondition.value >= 66) return '#28a745';
   }
 
-  const serializeFields = fields => {
+  const serializeFields = form => {
     const payload = {};
     payload.reportType = reportType.value;
 
-    const fieldNames = Object.keys(fields);
-    for (let field of fieldNames) {
-      payload[field] = fields[field].value;
+    const fields = Object.keys(form);
+    for (let field of fields) {
+      payload[field] = form[field].value;
     }
     
     return JSON.stringify(payload);
@@ -156,19 +155,15 @@ const ReportForm = () => {
         method = 'reportTreatmentAdministration';
       }
       
-      let payload = serializeFields(form.fields);
+      let payload = serializeFields(form);
       
       try {
         let result = await ctxState.study.methods[method](payload).send();
         if (result.status) {
           // Reset fields
           setReportType({ value: '', isValid: null });
-          setFormStateTreatment({ 
-            fields : DEF_FIELDS_FORM_STATE_TREATMENT
-          });
-          setFormStateStatus({
-            fields : DEF_FIELDS_FORM_STATE_STATUS
-          });
+          setFormStateTreatment(DEF_FIELDS_FORM_STATE_TREATMENT);
+          setFormStateStatus(DEF_FIELDS_FORM_STATE_STATUS);
           setSuccess('Successfuly submitted report!');
           setTimeout(() => setSuccess(null), 6000);
         } else {
@@ -229,29 +224,29 @@ const ReportForm = () => {
                 <Form.Group controlId="treatmentKitId">
                   <Form.Label>Treatment kit ID: </Form.Label>
                   <Form.Control 
-                    isInvalid={formStateTreatment.fields.treatmentKitId.isValid === false} 
-                    isValid={formStateTreatment.fields.treatmentKitId.isValid === true} 
+                    isInvalid={formStateTreatment.treatmentKitId.isValid === false} 
+                    isValid={formStateTreatment.treatmentKitId.isValid === true} 
                     type="text" 
-                    value={formStateTreatment.fields.treatmentKitId.value} 
+                    value={formStateTreatment.treatmentKitId.value} 
                     onChange={e => handleChange('treatmentKitId', e)} />
                 </Form.Group>
                 <Form.Group controlId="dosage">
                   <Form.Label>Dosage (mg): </Form.Label>
                   <Form.Control 
-                    isInvalid={formStateTreatment.fields.dosage.isValid === false} 
-                    isValid={formStateTreatment.fields.dosage.isValid === true} 
+                    isInvalid={formStateTreatment.dosage.isValid === false} 
+                    isValid={formStateTreatment.dosage.isValid === true} 
                     type="number" 
-                    value={formStateTreatment.fields.dosage.value} 
+                    value={formStateTreatment.dosage.value} 
                     onChange={e => handleChange('dosage', e)} />
                 </Form.Group>
                 <Form.Group controlId="timeOfAdministration">
                   <Form.Label>Date/Time of administration: </Form.Label><br></br> 
                   <DatePickerInput 
-                    initialValue={formStateTreatment.fields.timeOfAdministration.value}
+                    initialValue={formStateTreatment.timeOfAdministration.value}
                     /* Hacks beget hacks... */
                     onChange={datetime => handleChange('timeOfAdministration', { target: { value: datetime } })}
-                    isInvalid={formStateTreatment.fields.timeOfAdministration.isValid === false} 
-                    isValid={formStateTreatment.fields.timeOfAdministration.isValid === true} 
+                    isInvalid={formStateTreatment.timeOfAdministration.isValid === false} 
+                    isValid={formStateTreatment.timeOfAdministration.isValid === true} 
                   />
                 </Form.Group>
               </React.Fragment> :
@@ -274,12 +269,12 @@ const ReportForm = () => {
                 ].map(field => {
                   return (
                     <Form.Group controlId={field} key={`formStateStatus_${field}`}>
-                      <Form.Label>{formStateStatus.fields[field].label} :</Form.Label>
+                      <Form.Label>{formStateStatus[field].label} :</Form.Label>
                       <Form.Control 
-                        isInvalid={formStateStatus.fields[field].isValid === false} 
-                        isValid={formStateStatus.fields[field].isValid === true} 
-                        type={formStateStatus.fields[field].type} 
-                        value={formStateStatus.fields[field].value} 
+                        isInvalid={formStateStatus[field].isValid === false} 
+                        isValid={formStateStatus[field].isValid === true} 
+                        type={formStateStatus[field].type} 
+                        value={formStateStatus[field].value} 
                         onChange={e => handleChange(field, e)} />
                     </Form.Group>
                   );
@@ -289,7 +284,7 @@ const ReportForm = () => {
                   <Form.Label>General condition :</Form.Label><br></br>
                   <Slider
                     axis="x"
-                    x={formStateStatus.fields.generalCondition.value}
+                    x={formStateStatus.generalCondition.value}
                     styles={{
                       active: {
                         backgroundColor: getSliderColor()
@@ -306,21 +301,21 @@ const ReportForm = () => {
                   <Form.Control 
                     as="textarea" 
                     rows={4} 
-                    isInvalid={formStateStatus.fields.notes.isValid === false} 
-                    isValid={formStateStatus.fields.notes.isValid === true} 
+                    isInvalid={formStateStatus.notes.isValid === false} 
+                    isValid={formStateStatus.notes.isValid === true} 
                     onChange={ e => handleChange('notes', e) } 
                   />
                 </Form.Group>
                 <Form.Text className="text-muted">
-                {`${formStateStatus.fields.notes.value ? formStateStatus.fields.notes.value.length : 0} / 15 characters`}
+                {`${formStateStatus.notes.value ? formStateStatus.notes.value.length : 0} / 15 characters`}
                 </Form.Text>
                 <Form.Group controlId='timeOfReport'>
                   <Form.Label>Time of Report :</Form.Label><br></br>
                   <DatePickerInput 
-                    initialValue={formStateTreatment.fields.timeOfAdministration.value}
+                    initialValue={formStateStatus.timeOfReport.value}
                     onChange={datetime => handleChange('timeOfReport', { target: { value: datetime } })}
-                    isInvalid={formStateStatus.fields.timeOfReport.isValid === false} 
-                    isValid={formStateStatus.fields.timeOfReport.isValid === true} 
+                    isInvalid={formStateStatus.timeOfReport.isValid === false} 
+                    isValid={formStateStatus.timeOfReport.isValid === true} 
                   />
                 </Form.Group>
 
