@@ -11,5 +11,15 @@ Because we store a record of every action on the blockchain, we can trust that a
 At the end of the study, all active participants receive a monetary reward in Ether from the "pot" initially set up by the Monitor and fed over the course of the study. Ideally the pot reward should be sufficient to offset any personal expense incurred via self-reporting (as any such interaction with the smart contract has a small associated fee).
 
 ## Setup 
+### Prerequisites
+- Brave browser or Chrome with MetaMask plugin
+- Ganache
+- Node and npm
+- Truffle suite installed globally (`npm install truffle --global`)
+
+### Clone the repository
+
+### Install dependecies
+`npm install`
 
 ## Usage
