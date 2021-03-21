@@ -1,15 +1,17 @@
-import React, { useContext, useEffect } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { Card, ListGroup, ListGroupItem } from 'react-bootstrap';
 import { Web3Context } from './Web3Context';
-
-let patientData = {};
 
 const Profile = props => {
 
   const { ctxState } = useContext(Web3Context);
+  const [patientData, setPatientData] = useState({});
 
   useEffect(() => {
-    (async () => {patientData = await getPatientData();})();
+    (async () => {
+      const patientData = await getPatientData();
+      setPatientData(patientData);
+    })();
   }, []);
 
   const getPatientData = async () => {

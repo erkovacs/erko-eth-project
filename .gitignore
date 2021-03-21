@@ -22,3 +22,6 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# package-lock has caused problems in the past -- ignore it
+package-lock.json

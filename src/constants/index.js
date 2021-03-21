@@ -5,3 +5,17 @@ export const GENDERS = [
    'female',
    'other'
  ];
+ export const REPORT_TYPES = {
+   NONE: {
+     value: '',
+     label: '-- None --'
+   },
+   TREATMENT_ADMINISTRATION_REPORT: {
+     value: 'TREATMENT_ADMINISTRATION_REPORT',
+     label: 'Treatment Administration Report'
+   },
+   STATUS_REPORT: {
+     value: 'STATUS_REPORT',
+     label: 'Status Report (self-assessment)'
+   }
+ };
