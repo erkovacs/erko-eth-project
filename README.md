@@ -13,13 +13,27 @@ At the end of the study, all active participants receive a monetary reward in Et
 ## Setup 
 ### Prerequisites
 - Brave browser or Chrome with MetaMask plugin
-- Ganache
-- Node and npm
+- Ganache (https://www.trufflesuite.com/ganache)
+- Node and npm (https://nodejs.org/en/)
 - Truffle suite installed globally (`npm install truffle --global`)
 
 ### Clone the repository
+`mkdir double-blind-study-app`
+`cd double-blind-study-app`
+`git clone https://github.com/erkovacs/erko-eth-project.git .`
 
 ### Install dependecies
 `npm install`
+
+### Setup dev environment
+ - Open Ganache
+ - Create a new workspace by navigating to and selecting the `truffle-config.js` file
+ - Open Brave or Chrome and access MetaMask
+ - Add the local Ganache instance as a custom network
+ - Open a terminal in the project root directory and issue the command `truffle migrate`
+ - Verify in Ganache if the contracts are deployed (they should show up under the "Contracts" tab)
+ - Import an account from Ganache (it gives you a lot of accounts with a lot of cash in them) into MetaMask. __DO NOT__ attempt to use these funds on a real network.
+ - In the terminal in the project root directory, issue the command `npm run start`. This should open a React development server on localhost:3000
+ - Access http://localhost:3000 from the browser with MetaMask Setup. If everything is set up correctly MetaMask should prompt you to connect to the site. Do so with the imported account!
 
 ## Usage
