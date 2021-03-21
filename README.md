@@ -19,7 +19,9 @@ At the end of the study, all active participants receive a monetary reward in Et
 
 ### Clone the repository
 `mkdir double-blind-study-app`
+
 `cd double-blind-study-app`
+
 `git clone https://github.com/erkovacs/erko-eth-project.git .`
 
 ### Install dependecies
