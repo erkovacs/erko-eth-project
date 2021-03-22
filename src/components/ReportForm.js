@@ -247,7 +247,7 @@ const ReportForm = () => {
                     onChange={datetime => handleChange('timeOfAdministration', { target: { value: datetime } })}
                     isInvalid={formStateTreatment.timeOfAdministration.isValid === false} 
                     isValid={formStateTreatment.timeOfAdministration.isValid === true} 
-                  />
+                  /> UTC
                 </Form.Group>
               </React.Fragment> :
               ''
@@ -316,7 +316,7 @@ const ReportForm = () => {
                     onChange={datetime => handleChange('timeOfReport', { target: { value: datetime } })}
                     isInvalid={formStateStatus.timeOfReport.isValid === false} 
                     isValid={formStateStatus.timeOfReport.isValid === true} 
-                  />
+                  /> UTC
                 </Form.Group>
 
               </React.Fragment>:

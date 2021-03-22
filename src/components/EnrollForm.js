@@ -2,7 +2,6 @@ import { Alert, Button, Card, Form } from 'react-bootstrap'
 import React, { useState, useContext } from 'react';
 import { Bytes32_NULL, GENDERS } from '../constants';
 import { Web3Context } from './Web3Context';
-import './Form.css';
 
 const EnrollForm = props => {
 
