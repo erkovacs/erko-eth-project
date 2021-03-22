@@ -50,7 +50,7 @@ const Profile = props => {
   }
 
   return (
-    <div className="patient-profile">
+    <div>
       <br></br>
       <Card>
         <Card.Body>
