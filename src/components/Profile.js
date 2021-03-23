@@ -2,10 +2,13 @@ import React, { useContext, useEffect, useState } from 'react';
 import { Card, Table } from 'react-bootstrap';
 import { formatDate } from '../utils';
 import { Web3Context } from './Web3Context';
+import { ToastContext } from './ToastContext';
 
 const Profile = props => {
 
   const { web3jsState } = useContext(Web3Context);
+  const [toasts, addToast] = useContext(ToastContext);
+
   const [patientData, setPatientData] = useState({});
 
   useEffect(() => {
@@ -43,7 +46,7 @@ const Profile = props => {
       }
       return patientData;
     } catch (e) {
-      // TODO:: add toast here if there is time left
+      addToast('Error', e.message);
       console.error('Error: ' + e.message);
       return {};
     }

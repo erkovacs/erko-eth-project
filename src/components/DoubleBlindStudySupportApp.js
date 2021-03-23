@@ -13,7 +13,7 @@ import './App.css';
 
 const DoubleBlindStudySupportApp = props => {
   const { web3jsState, connectMetamask } = useContext(Web3Context);
-  const [toasts, setToasts] = useContext(ToastContext);
+  const [toasts, addToast] = useContext(ToastContext);
   const [state, setState] = useState({});
 
   useEffect(() => {
@@ -78,20 +78,12 @@ const DoubleBlindStudySupportApp = props => {
             </main>
           </div>
           
-            <div  style={{
-              position: 'absolute',
-              top: 80,
-              right: 20,
-            }}>
-            { toasts.map(toast => {
-              return (<Toast onClose={() => console.log('close')} show={true} delay={3000} autohide>
-                <Toast.Header>
-                  <strong className="mr-auto">Bootstrap</strong>
-                  <small>11 mins ago</small>
-                </Toast.Header>
-                <Toast.Body>Woohoo, you're reading this text in a Toast!</Toast.Body>
-              </Toast>);
-            })}
+          <div style={{
+            position: 'fixed',
+            top: 80,
+            right: 20,
+          }}>
+            { toasts }
           </div>
         </div>
         <footer className="page-footer font-small blue pt-4">

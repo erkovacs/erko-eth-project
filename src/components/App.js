@@ -1,5 +1,4 @@
 import React from 'react';
-
 import { Web3Provider } from './Web3Context';
 import { ToastProvider } from './ToastContext';
 

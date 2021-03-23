@@ -2,10 +2,13 @@ import { Alert, Button, Card, Form } from 'react-bootstrap'
 import React, { useState, useContext } from 'react';
 import { Bytes32_NULL, GENDERS } from '../constants';
 import { Web3Context } from './Web3Context';
+import { ToastContext } from './ToastContext';
 
 const EnrollForm = props => {
 
   const { web3jsState, setWeb3jsState } = useContext(Web3Context);
+  const [toasts, addToast] = useContext(ToastContext);
+
   const [state, setState] = useState({
     fields: {
       account: { value: web3jsState.account, isValid: null },
@@ -68,11 +71,11 @@ const EnrollForm = props => {
       await web3jsState.study.methods.enroll(JSON.stringify(fields)).send();
       const patientId = await web3jsState.study.methods.isPatientEnrolled(fields.account.value).call();
       if (Bytes32_NULL !== patientId) {
-        // TODO:: show success toast
+        addToast('Success', 'Successfully enrolled!');
         setWeb3jsState({ isPatientEnrolled: true, patientId: patientId });
       } else {
-        // TODO:: show danger toast for errors
-        console.error(`Error: Bad patient ID returned: ${patientId}`);
+        addToast('Error', `Invalid patient ID returned: ${patientId}`);
+        console.error(`Error: Invalid patient ID returned: ${patientId}`);
       }
     } catch (e) {
       console.error(e.message);
