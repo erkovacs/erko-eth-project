@@ -2,13 +2,16 @@ import { Alert, Button, Card, Form } from 'react-bootstrap'
 import React, { useState, useContext } from 'react';
 import { Bytes32_NULL, GENDERS } from '../constants';
 import { Web3Context } from './Web3Context';
+import { ToastContext } from './ToastContext';
 
 const EnrollForm = props => {
 
-  const { ctxState, setCtxState } = useContext(Web3Context);
+  const { web3jsState, setWeb3jsState } = useContext(Web3Context);
+  const [toasts, addToast] = useContext(ToastContext);
+
   const [state, setState] = useState({
     fields: {
-      account: { value: ctxState.account, isValid: null },
+      account: { value: web3jsState.account, isValid: null },
       height: { value: '', isValid: null },
       weight: { value: '', isValid: null },
       age: { value: '', isValid: null },
@@ -65,14 +68,14 @@ const EnrollForm = props => {
 
   const enroll = async fields => {
     try {
-      await ctxState.study.methods.enroll(JSON.stringify(fields)).send();
-      const patientId = await ctxState.study.methods.isPatientEnrolled(fields.account.value).call();
+      await web3jsState.study.methods.enroll(JSON.stringify(fields)).send();
+      const patientId = await web3jsState.study.methods.isPatientEnrolled(fields.account.value).call();
       if (Bytes32_NULL !== patientId) {
-        // TODO:: show success toast
-        setCtxState({ isPatientEnrolled: true, patientId: patientId });
+        addToast('Success', 'Successfully enrolled!');
+        setWeb3jsState({ isPatientEnrolled: true, patientId: patientId });
       } else {
-        // TODO:: show danger toast for errors
-        console.error(`Error: Bad patient ID returned: ${patientId}`);
+        addToast('Error', `Invalid patient ID returned: ${patientId}`);
+        console.error(`Error: Invalid patient ID returned: ${patientId}`);
       }
     } catch (e) {
       console.error(e.message);
@@ -153,7 +156,7 @@ const EnrollForm = props => {
               }) }
             </Form.Group>
 
-            <Button variant="dark" type="submit" onClick={e => onSubmit(e)}>
+            <Button variant="primary" type="submit" onClick={e => onSubmit(e)}>
               Enroll
             </Button>
           </Form>

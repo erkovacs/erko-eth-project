@@ -1,18 +1,18 @@
 import React, { useState, useContext } from 'react';
-import { Alert, Button, Card, Form } from 'react-bootstrap';
+import { Button, Card, Form } from 'react-bootstrap';
 import Slider from 'react-input-slider';
 import { Web3Context } from './Web3Context';
 import DatePickerInput from './DatePickerInput';
 import { nowUnix } from '../utils';
 import { REPORT_TYPES } from '../constants';
+import { ToastContext } from './ToastContext';
 
 const ReportForm = () => {
 
-  const { ctxState } = useContext(Web3Context);
+  const { web3jsState } = useContext(Web3Context);
+  const [toast, addToast] = useContext(ToastContext);
 
   const [submitting, setSubmitting] = useState(false);
-  const [_error, _setError] = useState(null);
-  const [success, setSuccess] = useState(null);
 
   // Global form state -- which form to show
   const [reportType, setReportType] = useState({
@@ -158,25 +158,22 @@ const ReportForm = () => {
       let payload = serializeFields(form);
       
       try {
-        let result = await ctxState.study.methods[method](payload).send();
+        let result = await web3jsState.study.methods[method](payload).send();
         if (result.status) {
           // Reset fields
           setReportType({ value: '', isValid: null });
           setFormStateTreatment(DEF_FIELDS_FORM_STATE_TREATMENT);
           setFormStateStatus(DEF_FIELDS_FORM_STATE_STATUS);
-          setSuccess('Successfuly submitted report!');
-          setTimeout(() => setSuccess(null), 6000);
+          addToast('Success', 'Successfuly submitted report!');
         } else {
           throw new Error(`Error in transaction: ${JSON.stringify(result)}`);
         }
       } catch (e) {
         console.error(e.message);
-        _setError(`Error: ${e.message}`);
-        setTimeout(() => _setError(null), 6000);
+        addToast('Error', `Error: ${e.message}`);
       }
     } else {
-      _setError('Check the form for errors!');
-      setTimeout(() => _setError(null), 6000);
+      addToast('Invalid data in form', 'Check the form for errors!');
     }
     setSubmitting(false);
   }
@@ -189,12 +186,6 @@ const ReportForm = () => {
           <Card.Title>Report Treatment Administration or Status</Card.Title>
           <Form>
             <br></br>
-            {_error ? <Alert variant="danger">
-              {_error}
-            </Alert> : ''}
-            {success ? <Alert variant="success">
-              {success}
-            </Alert> : ''}
             <Form.Group controlId="reportType">
               <Form.Label>Report type</Form.Label>
               <Form.Control as="select" onChange={e => handleChange('reportType', e)}>
@@ -326,7 +317,7 @@ const ReportForm = () => {
             {
             REPORT_TYPES.NONE.value !== reportType.value ? 
               <Button 
-                variant="dark" 
+                variant="primary" 
                 type="submit" 
                 disabled={submitting === true}
                 onClick={e => onSubmit(e)}>

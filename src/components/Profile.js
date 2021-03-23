@@ -2,10 +2,13 @@ import React, { useContext, useEffect, useState } from 'react';
 import { Card, Table } from 'react-bootstrap';
 import { formatDate } from '../utils';
 import { Web3Context } from './Web3Context';
+import { ToastContext } from './ToastContext';
 
 const Profile = props => {
 
-  const { ctxState } = useContext(Web3Context);
+  const { web3jsState } = useContext(Web3Context);
+  const [toasts, addToast] = useContext(ToastContext);
+
   const [patientData, setPatientData] = useState({});
 
   useEffect(() => {
@@ -19,7 +22,7 @@ const Profile = props => {
     const patientData = {};
 
     try {
-      const result = await ctxState.study.methods.getPatientData(ctxState.account).call();
+      const result = await web3jsState.study.methods.getPatientData(web3jsState.account).call();
       if ('undefined' !== typeof result[2]) {
         const data = JSON.parse(result[2]);
         const props = Object.keys(data);
@@ -43,7 +46,7 @@ const Profile = props => {
       }
       return patientData;
     } catch (e) {
-      // TODO:: add toast here if there is time left
+      addToast('Error', e.message);
       console.error('Error: ' + e.message);
       return {};
     }
@@ -56,13 +59,13 @@ const Profile = props => {
         <Card.Body>
           <Card.Title>Patient Profile</Card.Title>
           <Card.Text>
-            <b>Account</b> <a href="/#">{ctxState.account}</a>
+            <b>Account</b> <a href="/#">{web3jsState.account}</a>
           </Card.Text>
         </Card.Body>
         <Card.Body>
         <Table bordered hover>
           <tbody>
-            <tr><td><b>Patient ID</b></td><td>{ctxState.patientId}</td></tr>
+            <tr><td><b>Patient ID</b></td><td>{web3jsState.patientId}</td></tr>
             <tr><td><b>Height</b></td><td>{patientData.height ? `${patientData.height.value} cm` : '-'}</td></tr>
             <tr><td><b>Weight</b></td><td>{patientData.weight ? `${patientData.weight.value} kg` : '-'}</td></tr>
             <tr><td><b>Age</b></td><td>{patientData.age ? `${patientData.age.value} years` : '-'}</td></tr>

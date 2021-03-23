@@ -57,9 +57,6 @@ export const Web3Provider = props => {
         const patientId = await study.methods.isPatientEnrolled(account).call();
         const isPatientEnrolled =  Bytes32_NULL !== patientId;
 
-        // TODO:: remove after debug is done
-        window.__contract = study.methods;
-
         setState({
           hasMetamask: true,
           web3 : web3,
@@ -72,6 +69,7 @@ export const Web3Provider = props => {
         });
       } catch (e) {
         setState({
+          ...state,
           hasMetamask: true,
           isMetamaskConnected: isMetamaskConnected,
         });
@@ -79,6 +77,7 @@ export const Web3Provider = props => {
       }
     } else {
       setState({
+        ...state, 
         hasMetamask: false
       });
       console.error('MetaMask is not installed.');
@@ -89,13 +88,13 @@ export const Web3Provider = props => {
     await loadBlockchainData();
   }
 
-  const setCtxState = async _state => {
+  const setWeb3jsState = async _state => {
     setState(_state);
   }
 
   return (<Web3Context.Provider value={{ 
-      ctxState: state, 
-      setCtxState: setCtxState,
+      web3jsState: state, 
+      setWeb3jsState: setWeb3jsState,
       connectMetamask: connectMetamask, 
     }}>{props.children}</Web3Context.Provider>);
 }
