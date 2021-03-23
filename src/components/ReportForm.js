@@ -8,7 +8,7 @@ import { REPORT_TYPES } from '../constants';
 
 const ReportForm = () => {
 
-  const { ctxState } = useContext(Web3Context);
+  const { web3jsState } = useContext(Web3Context);
 
   const [submitting, setSubmitting] = useState(false);
   const [_error, _setError] = useState(null);
@@ -158,7 +158,7 @@ const ReportForm = () => {
       let payload = serializeFields(form);
       
       try {
-        let result = await ctxState.study.methods[method](payload).send();
+        let result = await web3jsState.study.methods[method](payload).send();
         if (result.status) {
           // Reset fields
           setReportType({ value: '', isValid: null });
@@ -326,7 +326,7 @@ const ReportForm = () => {
             {
             REPORT_TYPES.NONE.value !== reportType.value ? 
               <Button 
-                variant="dark" 
+                variant="primary" 
                 type="submit" 
                 disabled={submitting === true}
                 onClick={e => onSubmit(e)}>
