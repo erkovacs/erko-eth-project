@@ -22,3 +22,8 @@ export const REPORT_TYPES = {
     label: 'Status Report (self-assessment)'
   }
 };
+
+export const ORDER_STATUSES = {
+  PENDING_ADMINISTRATION: 0,
+  ADMINSTERED: 1
+};

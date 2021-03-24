@@ -2,7 +2,8 @@ import { Tabs, Tab, Toast, Navbar, Button } from 'react-bootstrap'
 import React, { useContext, useEffect, useState } from 'react';
 import EnrollForm from './EnrollForm';
 import Profile from './Profile';
-import Order from './Order';
+import OrderForm from './OrderForm';
+import OrderList from './OrderList';
 import ReportForm from './ReportForm';
 import ClaimReward from './ClaimReward';
 import { Web3Context } from './Web3Context';
@@ -57,10 +58,13 @@ const DoubleBlindStudySupportApp = props => {
                       <Tab eventKey="Profile" title="Profile" disabled={!state.isPatientEnrolled}>
                         <Profile />
                       </Tab>
-                      <Tab eventKey="Order" title="Order">
-                        <Order/>
+                      <Tab eventKey="Order" title="Order" disabled={!state.isPatientEnrolled}>
+                        <OrderForm />
                       </Tab>
-                      <Tab eventKey="Report" title="Report">
+                      <Tab eventKey="My_orders" title="My Orders" disabled={!state.isPatientEnrolled}>
+                        <OrderList />
+                      </Tab>
+                      <Tab eventKey="Report" title="Report" disabled={!state.isPatientEnrolled}>
                         <ReportForm />
                       </Tab>
                       <Tab eventKey="Claim_reward" title="Claim reward" disabled={!state.isStudyConcluded}>
