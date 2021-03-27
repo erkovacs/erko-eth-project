@@ -104,9 +104,6 @@ const EnrollForm = () => {
           <Card.Title>Patient Enrollment for Study participation</Card.Title>
           <Form>
             <br></br>
-            { state.error ? <Alert variant="danger">
-              {state.error}
-            </Alert> : '' }
             <Form.Group controlId="account">
               <Form.Label>Patient Wallet address: </Form.Label>
               <Form.Control
