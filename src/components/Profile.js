@@ -66,10 +66,10 @@ const Profile = props => {
         <Table bordered hover>
           <tbody>
             <tr><td><b>Patient ID</b></td><td>{web3jsState.patientId}</td></tr>
-            <tr><td><b>Height</b></td><td>{patientData.height ? `${patientData.height.value} cm` : '-'}</td></tr>
-            <tr><td><b>Weight</b></td><td>{patientData.weight ? `${patientData.weight.value} kg` : '-'}</td></tr>
-            <tr><td><b>Age</b></td><td>{patientData.age ? `${patientData.age.value} years` : '-'}</td></tr>
-            <tr><td><b>Gender</b></td><td>{patientData.gender ? patientData.gender.value : '-'}</td></tr>
+            <tr><td><b>Height</b></td><td>{patientData.height ? `${patientData.height} cm` : '-'}</td></tr>
+            <tr><td><b>Weight</b></td><td>{patientData.weight ? `${patientData.weight} kg` : '-'}</td></tr>
+            <tr><td><b>Age</b></td><td>{patientData.age ? `${patientData.age} years` : '-'}</td></tr>
+            <tr><td><b>Gender</b></td><td>{patientData.gender ? patientData.gender : '-'}</td></tr>
             <tr><td><b>Enrolled on</b></td><td>{patientData.date ? `${formatDate(patientData.date)} UTC` : '-'}</td></tr>
           </tbody>
         </Table>

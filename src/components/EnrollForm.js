@@ -4,11 +4,12 @@ import { Bytes32_NULL, GENDERS } from '../constants';
 import { Web3Context } from './Web3Context';
 import { ToastContext } from './ToastContext';
 
-const EnrollForm = props => {
+const EnrollForm = () => {
 
   const { web3jsState, setWeb3jsState } = useContext(Web3Context);
   const [toasts, addToast] = useContext(ToastContext);
 
+  const [submitting, setSubmitting] = useState(false);
   const [state, setState] = useState({
     fields: {
       account: { value: web3jsState.account, isValid: null },
@@ -16,8 +17,7 @@ const EnrollForm = props => {
       weight: { value: '', isValid: null },
       age: { value: '', isValid: null },
       gender: { value: null, isValid: null }
-    },
-    error: ''
+    }
   });
 
   const handleChange = (field, e) => {
@@ -56,31 +56,45 @@ const EnrollForm = props => {
     return valid;
   }
 
-  const onSubmit = e => {
-    e.preventDefault();
-    if (validateForm()) {
-      enroll(state.fields);
-    } else {
-      const fields = state.fields;
-      setState({ error: 'Check the form for errors!', fields: fields });
+  const serializeFields = form => {
+    const payload = {};
+    const fields = Object.keys(form);
+    for (let field of fields) {
+      payload[field] = form[field].value;
     }
+    return JSON.stringify(payload);
   }
 
-  const enroll = async fields => {
-    try {
-      await web3jsState.study.methods.enroll(JSON.stringify(fields)).send();
-      const patientId = await web3jsState.study.methods.isPatientEnrolled(fields.account.value).call();
-      if (Bytes32_NULL !== patientId) {
-        addToast('Success', 'Successfully enrolled!');
-        setWeb3jsState({ isPatientEnrolled: true, patientId: patientId });
-      } else {
-        addToast('Error', `Invalid patient ID returned: ${patientId}`);
-        console.error(`Error: Invalid patient ID returned: ${patientId}`);
-      }
-    } catch (e) {
-      console.error(e.message);
+  const onSubmit = async e => {
+    e.preventDefault();
+
+    if (true === submitting) {
+      return; 
+    } else {
+      setSubmitting(true);
     }
-  } 
+    
+    if (validateForm()) {
+      try {
+        const payload = serializeFields(state.fields);
+        await web3jsState.study.methods.enroll(payload).send();
+        const patientId = await web3jsState.study.methods.isPatientEnrolled(state.fields.account.value).call();
+        if (Bytes32_NULL !== patientId) {
+          addToast('Success', 'Successfully enrolled!');
+          setWeb3jsState({ isPatientEnrolled: true, patientId: patientId });
+        } else {
+          addToast('Error', `Invalid patient ID returned: ${patientId}`);
+          console.error(`Error: Invalid patient ID returned: ${patientId}`);
+        }
+      } catch (e) {
+        addToast('Error', e.message);
+        console.error(e.message);
+      }
+    } else {
+      addToast('Error', 'Check the form for errors!');
+    }
+    setSubmitting(false);
+  }
 
   return (
     <div>
@@ -156,7 +170,7 @@ const EnrollForm = props => {
               }) }
             </Form.Group>
 
-            <Button variant="primary" type="submit" onClick={e => onSubmit(e)}>
+            <Button variant="primary" type="submit" disabled={submitting === true} onClick={e => onSubmit(e)}>
               Enroll
             </Button>
           </Form>
