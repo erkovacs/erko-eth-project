@@ -1,4 +1,4 @@
-import { Tabs, Tab, Toast, Navbar, Button } from 'react-bootstrap'
+import { Tabs, Tab, Navbar, Button } from 'react-bootstrap'
 import React, { useContext, useEffect, useState } from 'react';
 import EnrollForm from './EnrollForm';
 import Profile from './Profile';
@@ -12,14 +12,26 @@ import { TITLE } from '../constants';
 import logo from '../logo.png';
 import './App.css';
 
+// TODO:: separate web3jsState and state
+
 const DoubleBlindStudySupportApp = props => {
   const { web3jsState, connectMetamask } = useContext(Web3Context);
   const [toasts, addToast] = useContext(ToastContext);
   const [state, setState] = useState({});
+  const [navTab, setNavTab] = useState('Enroll');
 
   useEffect(() => {
     setState(web3jsState);
   }, [web3jsState, web3jsState.hasMetamask, web3jsState.isMetamaskConnected]);
+
+  useEffect(() => {
+    setNavTab(state.isPatientEnrolled ? 'Profile' : 'Enroll');
+  }, [state.isPatientEnrolled]);
+
+  // TODO:: set defaults in ReportForm
+  const setReportDefaults = defaults => {
+    console.log(defaults);
+  }
 
   return (
       <React.Fragment>
@@ -51,7 +63,7 @@ const DoubleBlindStudySupportApp = props => {
               <div className="content mr-auto ml-auto col-lg-5">
               { state.hasMetamask ? 
                   state.isMetamaskConnected ?
-                  <Tabs defaultActiveKey={state.isPatientEnrolled ? 'Profile' : 'Enroll'} id="uncontrolled-tab-example">
+                  <Tabs activeKey={navTab} onSelect={key => setNavTab(key)} id="nav-tabs">
                       <Tab eventKey="Enroll" title="Enroll" disabled={state.isPatientEnrolled}>
                         <EnrollForm />
                       </Tab>
@@ -62,7 +74,7 @@ const DoubleBlindStudySupportApp = props => {
                         <OrderForm />
                       </Tab>
                       <Tab eventKey="My_orders" title="My Orders" disabled={!state.isPatientEnrolled}>
-                        <OrderList />
+                        <OrderList setNavTab={setNavTab} />
                       </Tab>
                       <Tab eventKey="Report" title="Report" disabled={!state.isPatientEnrolled}>
                         <ReportForm />

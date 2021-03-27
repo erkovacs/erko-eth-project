@@ -20,10 +20,16 @@ const Profile = props => {
 
   const getPatientData = async () => {
     const patientData = {};
+    
+    // Fast fail if patient not yet enrolled
+    if (!web3jsState.isPatientEnrolled) {
+      return patientData;
+    }
 
     try {
       const result = await web3jsState.study.methods.getPatientData(web3jsState.account).call();
-      if ('undefined' !== typeof result[2]) {
+
+      if (typeof result[2] !== 'undefined' && result[2] !== '') {
         const data = JSON.parse(result[2]);
         const props = Object.keys(data);
         for(let prop of props) {
@@ -33,7 +39,7 @@ const Profile = props => {
         throw new Error('Invalid result received.');
       }
 
-      if ('undefined' !== typeof result[3]) {
+      if (typeof result[3] !== 'undefined' && result[3] !== '') {
         let ts = 0;
         ts = parseInt(result[3]);
         if(isNaN(ts)) {
@@ -44,12 +50,11 @@ const Profile = props => {
       } else {
         throw new Error('Invalid result received, no enrollment timestamp present.');
       }
-      return patientData;
     } catch (e) {
       addToast('Error', e.message);
       console.error('Error: ' + e.message);
-      return {};
     }
+    return patientData;
   }
 
   return (
@@ -63,7 +68,7 @@ const Profile = props => {
           </Card.Text>
         </Card.Body>
         <Card.Body>
-        <Table bordered hover>
+        <Table bordered hover responsive>
           <tbody>
             <tr><td><b>Patient ID</b></td><td>{web3jsState.patientId}</td></tr>
             <tr><td><b>Height</b></td><td>{patientData.height ? `${patientData.height.value} cm` : '-'}</td></tr>

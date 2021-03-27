@@ -1,19 +1,19 @@
 import React, { useState, useContext } from 'react';
 import { Button, Card, Form } from 'react-bootstrap';
 import Slider from 'react-input-slider';
+import { ToastContext } from './ToastContext';
 import { Web3Context } from './Web3Context';
 import DatePickerInput from './DatePickerInput';
 import { nowUnix } from '../utils';
 import { REPORT_TYPES } from '../constants';
-import { ToastContext } from './ToastContext';
 
-const ReportForm = () => {
-
+const ReportForm = props => {
   const { web3jsState } = useContext(Web3Context);
   const [toast, addToast] = useContext(ToastContext);
 
   const [submitting, setSubmitting] = useState(false);
 
+  // TODO:: Programmatically set to show treatment administration report
   // Global form state -- which form to show
   const [reportType, setReportType] = useState({
     value: '', 
@@ -188,7 +188,7 @@ const ReportForm = () => {
             <br></br>
             <Form.Group controlId="reportType">
               <Form.Label>Report type</Form.Label>
-              <Form.Control as="select" onChange={e => handleChange('reportType', e)}>
+              <Form.Control as="select" defaultValue={reportType.value} onChange={e => handleChange('reportType', e)}>
                 { 
                   Object.keys(REPORT_TYPES).map(
                     (_reportType, i) => {
