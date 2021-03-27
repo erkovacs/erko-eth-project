@@ -13,12 +13,15 @@ import logo from '../logo.png';
 import './App.css';
 
 // TODO:: separate web3jsState and state
-
 const DoubleBlindStudySupportApp = props => {
   const { web3jsState, connectMetamask } = useContext(Web3Context);
   const [toasts, addToast] = useContext(ToastContext);
   const [state, setState] = useState({});
   const [navTab, setNavTab] = useState('Enroll');
+  const [reportType, setReportType] = useState({
+    value: '', 
+    isValid: null
+  });
 
   useEffect(() => {
     setState(web3jsState);
@@ -27,11 +30,6 @@ const DoubleBlindStudySupportApp = props => {
   useEffect(() => {
     setNavTab(state.isPatientEnrolled ? 'Profile' : 'Enroll');
   }, [state.isPatientEnrolled]);
-
-  // TODO:: set defaults in ReportForm
-  const setReportDefaults = defaults => {
-    console.log(defaults);
-  }
 
   return (
       <React.Fragment>
@@ -74,10 +72,10 @@ const DoubleBlindStudySupportApp = props => {
                         <OrderForm />
                       </Tab>
                       <Tab eventKey="My_orders" title="My Orders" disabled={!state.isPatientEnrolled}>
-                        <OrderList setNavTab={setNavTab} />
+                        <OrderList setNavTab={setNavTab} setReportType={setReportType} />
                       </Tab>
                       <Tab eventKey="Report" title="Report" disabled={!state.isPatientEnrolled}>
-                        <ReportForm />
+                        <ReportForm reportType={reportType} setReportType={setReportType}/>
                       </Tab>
                       <Tab eventKey="Claim_reward" title="Claim reward" disabled={!state.isStudyConcluded}>
                         <ClaimReward />

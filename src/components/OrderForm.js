@@ -1,16 +1,17 @@
 import React, { useState, useContext } from 'react';
 import { Button, Card, Col, Form, Row } from 'react-bootstrap';
+import { OrderContext, orderFactory } from './OrderContext';
 import { Web3Context } from './Web3Context';
 import { ToastContext } from './ToastContext';
 
 const OrderForm = props => {
   const { web3jsState } = useContext(Web3Context);
   const [toast, addToast] = useContext(ToastContext);
-
+  const [orders, setOrders] = useContext(OrderContext);
+  
   const [submitting, setSubmitting] = useState(false);
 
-  // State for Treatment Administration Report
-  const [fields, setFields] = useState({
+  const FIELD_DEFAULTS = {
     phone: { value: '', label: 'Phone', isValid: null, type: 'text' },
     fax: { value: '', label: 'Fax', isValid: null, type: 'text' },
     county: { value: '', label: 'County', isValid: null, type: 'text' },
@@ -23,7 +24,10 @@ const OrderForm = props => {
     floor: { value: '', label: 'Floor', isValid: null, type: 'text' },
     apartmentNumber: { value: '', label: 'Apartment number', isValid: null, type: 'text' },
     notes: { value: '', label: 'Notes', isValid: null, type: 'text' }
-  });
+  };
+
+  // State for Treatment Administration Report
+  const [fields, setFields] = useState(FIELD_DEFAULTS);
 
   const handleChange = (field, e) => {
 
@@ -65,6 +69,13 @@ const OrderForm = props => {
     return valid;
   }
 
+  const reset = () => {
+    const fieldsNames = Object.keys(fields);
+    for (let field of fieldsNames) {
+      handleChange(field, { target: { value: '' } });
+    }
+  }
+
   const serializeFields = form => {
     const payload = {};
 
@@ -99,11 +110,18 @@ const OrderForm = props => {
       
       // 4. Receive order id
       const result = await web3jsState.study.methods.getCurrentOrder().call();
-      console.log(result);
+      const order = orderFactory(result);
+      if (order) {
+        const _orders = orders.filter(_order => order.id !== _order.id);
+        setOrders([..._orders, order]);
+      }
       
       // TODO
       // 5. Send order id to external service
       // Done!
+      
+      setFields(FIELD_DEFAULTS);
+      addToast('Success', 'Successfuly placed order!');
     } else {
       addToast('Invalid data in form', 'Check the form for errors!');
     }
@@ -116,7 +134,7 @@ const OrderForm = props => {
       <Card>
         <Card.Body>
           <Card.Title>Order Treatment Kit</Card.Title>
-          <Form>
+          { orders.length === 0 ? <Form>
             <br></br>
             <React.Fragment>
               {[
@@ -139,7 +157,8 @@ const OrderForm = props => {
                         type={fields[field1].type}
                         value={fields[field1].value}
                         placeholder={fields[field1].label}
-                        onChange={e => handleChange(field1, e)} />
+                        onChange={e => handleChange(field1, e)} 
+                        disabled={orders.length > 0}/>
                     </Form.Group>
                   </Col> : '' }
                   { field2 ? <Col>
@@ -150,13 +169,17 @@ const OrderForm = props => {
                         type={fields[field2].type}
                         value={fields[field2].value}
                         placeholder={fields[field2].label}
-                        onChange={e => handleChange(field2, e)} />
+                        onChange={e => handleChange(field2, e)} 
+                        disabled={orders.length > 0}/>
                     </Form.Group> 
                   </Col> : '' }
                 </Row>
                 );
               })}
             </React.Fragment>
+            <Form.Text className="text-muted">
+              The address provided here will not be in any way associated with any of your Personally Identifiable Information.
+            </Form.Text>
             <Button
               variant="primary"
               type="submit"
@@ -164,7 +187,7 @@ const OrderForm = props => {
               onClick={e => onSubmit(e)}>
               Order
               </Button>
-          </Form>
+          </Form> : <Card.Text>You already have an active order!</Card.Text> }
         </Card.Body>
       </Card>
     </React.Fragment>

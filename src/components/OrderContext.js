@@ -1,9 +1,26 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { Web3Context } from './Web3Context';
-import { redactString } from '../utils';
+import { redactString, fromUnix } from '../utils';
+import { Bytes32_NULL } from '../constants';
 
 
 export const OrderContext = createContext();
+
+export const orderFactory = rpcResult => {
+  let order = null;
+  if (
+    typeof rpcResult[0] !== 'undefined' && 
+    rpcResult[0] !== '' && 
+    rpcResult[1] !== Bytes32_NULL
+  ) {
+    order = {};
+    order.id = rpcResult[0];
+    order.patientId = redactString(rpcResult[1], 30, 40);
+    order.voucher = redactString(rpcResult[2], 5);;
+    order.date = new Date(fromUnix(parseInt(rpcResult[3])));
+  }
+  return order;
+}
 
 export const OrderProvider = props => {
   const { web3jsState } = useContext(Web3Context);
@@ -15,16 +32,8 @@ export const OrderProvider = props => {
     }
     (async () => {
       const result = await web3jsState.study.methods.getCurrentOrder().call();
-      if (typeof result[0] !== 'undefined' && result[0] !== '') {
-        let patientId = redactString(result[1], 30, 40);
-        let voucher = redactString(result[2], 5);
-
-        const order = {
-          id: result[0],
-          patientId: patientId,
-          voucher: voucher,
-          date: new Date(parseInt(result[3]) * 1000)
-        };
+      const order = orderFactory(result);
+      if (order) {
         const _orders = orders.filter(_order => order.id !== _order.id);
         setOrders([..._orders, order]);
       }

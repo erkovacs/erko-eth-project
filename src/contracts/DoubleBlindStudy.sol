@@ -239,6 +239,9 @@ contract DoubleBlindStudy {
         bytes32 patientId = _getHash(msg.sender);
         uint256 ts = block.timestamp;
         reports[reportCount] = Report(reportCount, _type, patientId, _data, ts);
+        if (ReportType.TreatmentAdministration == _type) {
+            patientOrder[patientId] = 0;
+        }
     }
 
     /*

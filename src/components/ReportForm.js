@@ -1,24 +1,23 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { Button, Card, Form } from 'react-bootstrap';
 import Slider from 'react-input-slider';
-import { ToastContext } from './ToastContext';
 import { Web3Context } from './Web3Context';
+import { ToastContext } from './ToastContext';
+import { OrderContext } from './OrderContext';
 import DatePickerInput from './DatePickerInput';
 import { nowUnix } from '../utils';
 import { REPORT_TYPES } from '../constants';
 
 const ReportForm = props => {
+
   const { web3jsState } = useContext(Web3Context);
   const [toast, addToast] = useContext(ToastContext);
+  const [orders, setOrders] = useContext(OrderContext);
 
   const [submitting, setSubmitting] = useState(false);
 
-  // TODO:: Programmatically set to show treatment administration report
-  // Global form state -- which form to show
-  const [reportType, setReportType] = useState({
-    value: '', 
-    isValid: null
-  });
+  // Form state lifted to DoubleBlindStudySupportApp
+  const { reportType, setReportType } = props;
 
   // Treatment administration report fields
   const DEF_FIELDS_FORM_STATE_TREATMENT = {
@@ -43,6 +42,12 @@ const ReportForm = props => {
 
   // State for Status Report
   const [formStateStatus, setFormStateStatus] = useState(DEF_FIELDS_FORM_STATE_STATUS);
+
+  useEffect(() => {
+    if (orders.length > 0) {
+      setFormStateTreatment({ ...formStateTreatment, treatmentKitId: { value: orders[0].id, isValid: true } });
+    }
+  }, [orders])
 
   const handleChange = (field, e) => {
 
@@ -160,10 +165,13 @@ const ReportForm = props => {
       try {
         let result = await web3jsState.study.methods[method](payload).send();
         if (result.status) {
+          const orderId = formStateTreatment.treatmentKitId.value;
+          
           // Reset fields
           setReportType({ value: '', isValid: null });
           setFormStateTreatment(DEF_FIELDS_FORM_STATE_TREATMENT);
           setFormStateStatus(DEF_FIELDS_FORM_STATE_STATUS);
+          setOrders(orders.filter(order => orderId !== order.id));
           addToast('Success', 'Successfuly submitted report!');
         } else {
           throw new Error(`Error in transaction: ${JSON.stringify(result)}`);
@@ -188,14 +196,14 @@ const ReportForm = props => {
             <br></br>
             <Form.Group controlId="reportType">
               <Form.Label>Report type</Form.Label>
-              <Form.Control as="select" defaultValue={reportType.value} onChange={e => handleChange('reportType', e)}>
+              <Form.Control as="select" value={reportType.value} onChange={e => handleChange('reportType', e)}>
                 { 
                   Object.keys(REPORT_TYPES).map(
                     (_reportType, i) => {
                       return <option
                         key={i}
-                        value={ REPORT_TYPES[_reportType].value }>
-                        { REPORT_TYPES[_reportType].label }
+                        value={REPORT_TYPES[_reportType].value}>
+                        {REPORT_TYPES[_reportType].label}
                       </option>;
                     }) 
                 }
@@ -219,7 +227,9 @@ const ReportForm = props => {
                     isValid={formStateTreatment.treatmentKitId.isValid === true} 
                     type="text" 
                     value={formStateTreatment.treatmentKitId.value} 
-                    onChange={e => handleChange('treatmentKitId', e)} />
+                    onChange={e => handleChange('treatmentKitId', e)} 
+                    placeholder={'<No current active order>'}
+                    disabled={true} />
                 </Form.Group>
                 <Form.Group controlId="dosage">
                   <Form.Label>Dosage (mg): </Form.Label>

@@ -7,9 +7,10 @@ import { formatDate } from '../utils';
 const OrderList = props => {
   const [orders, setOrders] = useContext(OrderContext);
 
+  // Go to ReportForm and switch to the Treatment Administration form
   const navigateToReport = () => {
     props.setNavTab('Report');
-    props.setDefaultReportType(REPORT_TYPES.TREATMENT_ADMINISTRATION_REPORT);
+    props.setReportType(REPORT_TYPES.TREATMENT_ADMINISTRATION_REPORT);
   }
 
   return (
