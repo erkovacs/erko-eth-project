@@ -1,8 +1,9 @@
-import { Tabs, Tab, Toast, Navbar, Button } from 'react-bootstrap'
+import { Tabs, Tab, Navbar, Button } from 'react-bootstrap'
 import React, { useContext, useEffect, useState } from 'react';
 import EnrollForm from './EnrollForm';
 import Profile from './Profile';
-import Order from './Order';
+import OrderForm from './OrderForm';
+import OrderList from './OrderList';
 import ReportForm from './ReportForm';
 import ClaimReward from './ClaimReward';
 import { Web3Context } from './Web3Context';
@@ -11,14 +12,24 @@ import { TITLE } from '../constants';
 import logo from '../logo.png';
 import './App.css';
 
+// TODO:: separate web3jsState and state
 const DoubleBlindStudySupportApp = props => {
   const { web3jsState, connectMetamask } = useContext(Web3Context);
   const [toasts, addToast] = useContext(ToastContext);
   const [state, setState] = useState({});
+  const [navTab, setNavTab] = useState('Enroll');
+  const [reportType, setReportType] = useState({
+    value: '', 
+    isValid: null
+  });
 
   useEffect(() => {
     setState(web3jsState);
   }, [web3jsState, web3jsState.hasMetamask, web3jsState.isMetamaskConnected]);
+
+  useEffect(() => {
+    setNavTab(state.isPatientEnrolled ? 'Profile' : 'Enroll');
+  }, [state.isPatientEnrolled]);
 
   return (
       <React.Fragment>
@@ -50,18 +61,21 @@ const DoubleBlindStudySupportApp = props => {
               <div className="content mr-auto ml-auto col-lg-5">
               { state.hasMetamask ? 
                   state.isMetamaskConnected ?
-                  <Tabs defaultActiveKey={state.isPatientEnrolled ? 'Profile' : 'Enroll'} id="uncontrolled-tab-example">
+                  <Tabs activeKey={navTab} onSelect={key => setNavTab(key)} id="nav-tabs">
                       <Tab eventKey="Enroll" title="Enroll" disabled={state.isPatientEnrolled}>
                         <EnrollForm />
                       </Tab>
                       <Tab eventKey="Profile" title="Profile" disabled={!state.isPatientEnrolled}>
                         <Profile />
                       </Tab>
-                      <Tab eventKey="Order" title="Order">
-                        <Order/>
+                      <Tab eventKey="Order" title="Order" disabled={!state.isPatientEnrolled}>
+                        <OrderForm />
                       </Tab>
-                      <Tab eventKey="Report" title="Report">
-                        <ReportForm />
+                      <Tab eventKey="My_orders" title="My Orders" disabled={!state.isPatientEnrolled}>
+                        <OrderList setNavTab={setNavTab} setReportType={setReportType} />
+                      </Tab>
+                      <Tab eventKey="Report" title="Report" disabled={!state.isPatientEnrolled}>
+                        <ReportForm reportType={reportType} setReportType={setReportType}/>
                       </Tab>
                       <Tab eventKey="Claim_reward" title="Claim reward" disabled={!state.isStudyConcluded}>
                         <ClaimReward />

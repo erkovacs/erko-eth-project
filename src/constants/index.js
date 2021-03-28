@@ -22,3 +22,9 @@ export const REPORT_TYPES = {
     label: 'Status Report (self-assessment)'
   }
 };
+
+export const EXT_DRUGSTORE_API = {
+  BASE_URL: process.env.REACT_APP_EXT_DRUGSTORE_API,
+  VOUCHER: `${process.env.REACT_APP_EXT_DRUGSTORE_API}voucher`,
+  ORDER: `${process.env.REACT_APP_EXT_DRUGSTORE_API}order`,
+};

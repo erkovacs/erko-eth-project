@@ -1,209 +1,274 @@
 pragma solidity ^0.7.4;
 
 contract DoubleBlindStudy {
-    
     address payable private pot;
-    uint private startDate;
-    uint private endDate;
-    uint private duration;
-    
-    uint private patientCount;
-    mapping (bytes32 => Patient) private patients;
-    
-    uint private reportCount;
-    mapping (uint => Report) private reports;
-    
+    uint256 private startDate;
+    uint256 private endDate;
+    uint256 private duration;
+
+    uint256 private patientCount;
+    mapping(bytes32 => Patient) private patients;
+
+    uint256 private orderCount;
+    mapping(uint256 => Order) private orders;
+    mapping(bytes32 => uint256) private patientOrder;
+
+    uint256 private reportCount;
+    mapping(uint256 => Report) private reports;
+
     bool public active;
-    
+
     modifier requireActive {
         require(active);
         _;
     }
-    
-    enum Group {
-        Treatment,
-        Control
-    }
-    
-    enum ReportType {
-        TreatmentAdministration,
-        Status
-    }
+
+    enum Group {Treatment, Control}
+
+    enum ReportType {TreatmentAdministration, Status}
 
     struct Patient {
-        uint _id;
-        bytes32 _hash;
+        uint256 _id;
+        bytes32 _patientId;
         Group _group;
         string _data;
-        uint _enrolledOn;
+        uint256 _enrolledOn;
     }
-    
+
     struct Order {
-        uint _id;
+        uint256 _id;
         bytes32 _patientId;
+        string _voucher;
+        uint256 _orderedOn;
     }
-    
+
     struct Report {
-        uint _id;
+        uint256 _id;
         ReportType _reportType;
         bytes32 _patientId;
         string _data;
-        uint _reportedOn;
+        uint256 _reportedOn;
     }
-    
-    //
-    // the deployer of the contract is the study monitor
-    // 
-    // they should provide address of a wallet with sufficient 
-    // funds to finance expenses related to the study, called 
-    // the pot
-    // 
-    // for miscellaneous transactions the patients are
-    // expected to pay by themselves but this is mitigated
-    // by the pot being redistributed at the end of the study 
-    // to all participants
-    //
-    // startDate and duration are specified in seconds
-    //
-    /*constructor (address payable _pot, uint256 _startDate, uint256 _duration) {
+
+    /*
+      the deployer of the contract is the study monitor
+      
+      they should provide address of a wallet with sufficient 
+      funds to finance expenses related to the study, called 
+      the pot
+      
+      for miscellaneous transactions the patients are
+      expected to pay by themselves but this is mitigated
+      by the pot being redistributed at the end of the study 
+      to all participants
+      
+      startDate and duration are specified in seconds
+    */
+    constructor(
+        address payable _pot,
+        uint256 _startDate,
+        uint256 _duration
+    ) {
         pot = _pot;
         duration = _duration;
         startDate = _startDate;
         endDate = startDate + _duration;
-        
+
         patientCount = 0;
         reportCount = 0;
-        
+        orderCount = 0;
+
         // TODO:: deal with the logic here
         active = true;
-    }*/
-
-    //
-    // TODO:: remove after debugging
-    //
-    constructor () {
-        pot = msg.sender;
-        duration = 60 * 60 * 24;
-        uint ts = block.timestamp;
-        startDate = ts;
-        endDate = ts + duration;
-        
-        patientCount = 0;
-        reportCount = 0;
-
-        active = true;
     }
-    
+
     // helpers
 
-    //
-    // returns a pseudorandom number
-    //
-    function _random(uint seed) private view returns (uint) {
-        return uint(keccak256(abi.encodePacked(block.difficulty, block.timestamp, msg.sender, seed)));
-    } 
-    
-    //
-    // The first transaction at or after 
-    // the end date will deactivate the contract and
-    // conclude the study. Ran at the end of all public 
-    // calls to the contract
-    //
-    function _checkIfEnded () private {
+    /*
+      returns a pseudorandom number
+      TODO:: refactor into something better
+    */
+    function _random(uint256 seed) private view returns (uint256) {
+        return
+            uint256(
+                keccak256(
+                    abi.encodePacked(
+                        block.difficulty,
+                        block.timestamp,
+                        msg.sender,
+                        seed
+                    )
+                )
+            );
+    }
+
+    /*
+      The first transaction at or after
+      the end date will deactivate the contract and
+      conclude the study. Ran at the end of all public
+      calls to the contract
+    */
+    function _checkIfEnded() private {
         if (block.timestamp > endDate) {
             active = false;
             _concludeStudy();
         }
     }
 
-    // business logic
-    
-    // 
-    // Returns whether the specified patient is enrolled
-    //
-    function isPatientEnrolled (address payable _address) public view requireActive returns (bytes32) {
-        bytes32 _hash = keccak256(abi.encodePacked(_address));
-        return patients[_hash]._hash;
-    }
-    
-    //
-    // Returns patient data
-    //
-    function getPatientData (address payable _address) public view requireActive returns (uint, bytes32, string memory, uint) {
-        bytes32 _hash = keccak256(abi.encodePacked(_address));
-        Patient memory _patient = patients[_hash];
-        return (_patient._id, _patient._hash, _patient._data, _patient._enrolledOn);
+    function _getHash(address payable _address) private view returns (bytes32) {
+        return keccak256(abi.encodePacked(_address));
     }
 
-    //
-    // add a patient to the study
-    //
-    function enroll (string memory _data) public requireActive returns (bytes32) {
-        patientCount++;
-        address payable _address = msg.sender;
-        bytes32 _hash = keccak256(abi.encodePacked(_address));
-        uint ts = block.timestamp;
-        patients[_hash] = Patient(patientCount, _hash, _assignToGroup(), _data, ts);
-        return _hash;
+    // business logic
+
+    /*
+      Returns whether the specified patient is enrolled
+    */
+    function isPatientEnrolled(address payable _address)
+        public
+        view
+        requireActive
+        returns (bytes32)
+    {
+        bytes32 patientId = _getHash(_address);
+        return patients[patientId]._patientId;
     }
-    
-    // 
-    // assign patient to one of two groups - treatment or control
-    //
-    function _assignToGroup () private view returns (Group) {
-        uint seed = patientCount + reportCount;
-        uint randInt = _random(seed);
+
+    /*
+      Returns patient data
+    */
+    function getPatientData(address payable _address)
+        public
+        view
+        requireActive
+        returns (
+            uint256,
+            bytes32,
+            string memory,
+            uint256
+        )
+    {
+        bytes32 patientId = _getHash(_address);
+        Patient memory patient = patients[patientId];
+        return (
+            patient._id,
+            patient._patientId,
+            patient._data,
+            patient._enrolledOn
+        );
+    }
+
+    /*
+      add a patient to the study
+    */
+    function enroll(string memory _data)
+        public
+        requireActive
+        returns (bytes32)
+    {
+        patientCount++;
+        bytes32 patientId = _getHash(msg.sender);
+        uint256 ts = block.timestamp;
+        patients[patientId] = Patient(
+            patientCount,
+            patientId,
+            _assignToGroup(),
+            _data,
+            ts
+        );
+        return patientId;
+    }
+
+    /*
+      assign patient to one of two groups - treatment or control
+    */
+    function _assignToGroup() private view returns (Group) {
+        uint256 seed = patientCount + reportCount;
+        uint256 randInt = _random(seed);
         return randInt % 2 == 0 ? Group.Control : Group.Treatment;
     }
-    
-    //
-    // obscure the data in such a way that no one can see which 
-    // patient pertains to which group
-    //
-    // TODO:: find a solution for this. How can we blind the 
-    // patient?
-    //
-    function _blind () private {}
-    
-    //
-    // order a treatment kit -- real or placebo -- 
-    // based on the nature of the patient. pay out of the pot?
-    //
-    function order () public requireActive {}
-    
-    // 
-    // Add a report of specified type and with specified data
-    //
-    function _addReport(ReportType _type, string memory _data) private {
-        reportCount++;
-        address payable _address = msg.sender;
-        bytes32 _hash = keccak256(abi.encodePacked(_address));
-        uint ts = block.timestamp;
-        reports[reportCount] = Report(reportCount, _type, _hash, _data, ts);
+
+    /*
+      obscure the data in such a way that no one can see which
+      patient pertains to which group
+     
+      TODO:: find a solution for this. How can we blind the
+      patient?
+    */
+    function _blind() private {}
+
+    /*
+      order a treatment kit -- real or placebo --
+      based on the nature of the patient. pay out of the pot?
+    */
+    function order(string memory voucher) public requireActive {
+        orderCount++;
+        bytes32 patientId = _getHash(msg.sender);
+        uint256 ts = block.timestamp;
+        orders[orderCount] = Order(orderCount, patientId, voucher, ts);
+        patientOrder[patientId] = orderCount;
     }
 
-    //
-    // records administration of a treatment kit to a patient
-    //
-    function reportTreatmentAdministration (string memory _data) public requireActive {
+    function getCurrentOrder()
+        public
+        view
+        requireActive
+        returns (
+            uint256,
+            bytes32,
+            string memory,
+            uint256
+        )
+    {
+        bytes32 patientId = _getHash(msg.sender);
+        uint256 orderId = patientOrder[patientId];
+        Order memory _order = orders[orderId];
+        return (
+            _order._id,
+            _order._patientId,
+            _order._voucher,
+            _order._orderedOn
+        );
+    }
+
+    /*
+      Add a report of specified type and with specified data
+    */
+    function _addReport(ReportType _type, string memory _data) private {
+        reportCount++;
+        bytes32 patientId = _getHash(msg.sender);
+        uint256 ts = block.timestamp;
+        reports[reportCount] = Report(reportCount, _type, patientId, _data, ts);
+        if (ReportType.TreatmentAdministration == _type) {
+            patientOrder[patientId] = 0;
+        }
+    }
+
+    /*
+      records administration of a treatment kit to a patient
+    */
+    function reportTreatmentAdministration(string memory _data)
+        public
+        requireActive
+    {
         _addReport(ReportType.TreatmentAdministration, _data);
     }
-    
-    //
-    // records status of a patient following treatment administration
-    // part of continuous self-assesment
-    //
-    function reportStatus (string memory _data) public requireActive {
+
+    /*
+      records status of a patient following treatment administration
+      part of continuous self-assesment
+    */
+    function reportStatus(string memory _data) public requireActive {
         _addReport(ReportType.Status, _data);
     }
-    
-    // 
-    // fired at the end of the study (on or after endDate)
-    // 
-    function _concludeStudy () private {}
-    
-    // 
-    // reverse the blinding procedure
-    //
-    function _unblind () private {}
+
+    /*
+     fired at the end of the study (on or after endDate)
+    */
+    function _concludeStudy() private {}
+
+    /*
+      reverse the blinding procedure
+    */
+    function _unblind() private {}
 }

@@ -17,3 +17,12 @@ export const formatDate = date => {
   }
   return null;
 }
+
+export const redactString = (string, count, maxLength) => {
+  const xes = 'x'.repeat(count);
+  string = `${xes}${string.substring(count, string.length)}`;
+  if (maxLength) {
+    string = `${string.substring(0, maxLength)}...`;
+  }
+  return string;
+}
