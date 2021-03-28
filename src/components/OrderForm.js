@@ -1,8 +1,9 @@
 import React, { useState, useContext } from 'react';
 import { Button, Card, Col, Form, Row } from 'react-bootstrap';
-import { OrderContext, orderFactory } from './OrderContext';
+import { OrderContext, OrderFactory, OrderStates } from './OrderContext';
 import { Web3Context } from './Web3Context';
 import { ToastContext } from './ToastContext';
+import { EXT_DRUGSTORE_API } from '../constants';
 
 const OrderForm = props => {
   const { web3jsState } = useContext(Web3Context);
@@ -69,14 +70,7 @@ const OrderForm = props => {
     return valid;
   }
 
-  const reset = () => {
-    const fieldsNames = Object.keys(fields);
-    for (let field of fieldsNames) {
-      handleChange(field, { target: { value: '' } });
-    }
-  }
-
-  const serializeFields = form => {
+  const serializeFields = fields => {
     const payload = {};
 
     const fieldNames = Object.keys(fields);
@@ -97,31 +91,71 @@ const OrderForm = props => {
     }
 
     if (validateForm()) {
-      const payload = serializeFields(fields);
-      // 1. Send address to external service
-      // TODO:: make it work
-      console.log(payload);
+      try {
+        const payload = serializeFields(fields);
 
-      // 2. Get kit voucher
-      const voucher = 'XX-YY-ZZ-1234';
-      
-      // 3. Send kit voucher to contract
-      await web3jsState.study.methods.order(voucher).send();
-      
-      // 4. Receive order id
-      const result = await web3jsState.study.methods.getCurrentOrder().call();
-      const order = orderFactory(result);
-      if (order) {
-        const _orders = orders.filter(_order => order.id !== _order.id);
-        setOrders([..._orders, order]);
+        // 1. Send address to external service
+        const drugstoreResult = await fetch(EXT_DRUGSTORE_API.VOUCHER, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: payload
+        });
+        
+        // 2. Get kit voucher
+        const drugstoreVoucher = await drugstoreResult.json();
+        if (drugstoreVoucher.success) {
+          const { voucher } = drugstoreVoucher;
+          
+          // 3. Send kit voucher to contract
+          await web3jsState.study.methods.order(voucher).send();
+          
+          // 4. Receive order id
+          const result = await web3jsState.study.methods.getCurrentOrder().call();
+          const order = OrderFactory(result);
+
+          if (order) {
+            // Update orders
+            let _orders = orders.filter(_order => order.id !== _order.id);
+            _orders.push(order);
+            setOrders(_orders);
+            
+            // 5. Send order id to external service to confirm order
+            const orderConfirmationResult = await fetch(EXT_DRUGSTORE_API.ORDER, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                orderId: order.id,
+                voucher: voucher
+              })
+            });
+            
+            const orderConfirmation = await orderConfirmationResult.json();
+
+            if (orderConfirmation.success) {
+              // Confirm order
+              _orders = _orders.map(_order => {
+                if (order.id === _order.id) {
+                  _order.state = OrderStates.Confirmed;
+                }
+                return _order;
+              });
+              
+              setOrders(_orders);
+              
+              setFields(FIELD_DEFAULTS);
+              addToast('Success', 'Successfuly placed order!');
+            } else {
+              throw new Error('Order could not be confirmed with drugstore.');
+            }
+          } else {
+            throw new Error('Order ID could not be obtained.');
+          }
+        } else {
+          throw new Error('Drugstore voucher could not be obtained.');
+        }
+      } catch (e) {
+        addToast('Error', e.message);
       }
-      
-      // TODO
-      // 5. Send order id to external service
-      // Done!
-      
-      setFields(FIELD_DEFAULTS);
-      addToast('Success', 'Successfuly placed order!');
     } else {
       addToast('Invalid data in form', 'Check the form for errors!');
     }
