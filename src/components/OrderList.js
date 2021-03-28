@@ -1,6 +1,6 @@
 import React, { useContext } from 'react'
-import { Button, Card, Table } from 'react-bootstrap';
-import { OrderContext } from './OrderContext';
+import { Badge, Button, Card, Table } from 'react-bootstrap';
+import { OrderContext, OrderStates } from './OrderContext';
 import { REPORT_TYPES } from '../constants';
 import { formatDate } from '../utils';
 
@@ -24,6 +24,7 @@ const OrderList = props => {
                 <th>Order ID</th>
                 <th>Patient ID</th>
                 <th>Voucher code</th>
+                <th>State</th>
                 <th>Ordered on</th>
                 <th>Actions</th>
               </tr>
@@ -35,6 +36,11 @@ const OrderList = props => {
                     <td>{ order.id }</td>
                     <td>{ order.patientId }</td>
                     <td>{ order.voucher }</td>
+                    <td>
+                      <Badge variant={ order.state === OrderStates.Confirmed ? 'success' : 'warning' }>
+                        { order.state === OrderStates.Confirmed ? 'confirmed' : 'unconfirmed' }
+                      </Badge>
+                    </td>
                     <td>{ formatDate(order.date) }</td>
                     <td>
                       <Button size='sm' onClick={() => navigateToReport()}>Administer</Button>
