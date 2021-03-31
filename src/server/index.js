@@ -6,6 +6,8 @@ dotenv.config();
 
 const app = express();
 
+const mappings = [];
+
 const PORT = process.env.API_PORT || 5000;
 const ENV = process.env.ENVIRONMENT;
 
@@ -28,7 +30,7 @@ app.post('/api/blind', function (req, res) {
 
     // 2. Fair coin toss to add user to Treatment or Control
     const random = Math.floor(Math.random() * 2);
-    const group = random % 2 === 0 ? GROUPS.CONTROL : GROUPS.TREATMENT; 
+    const group = random % 2 === 0 ? GROUPS.CONTROL : GROUPS.TREATMENT;
 
     // 3. Generate Mapping ID = keccak256(patient ID, group ID)
     const hash = keccak('keccak256')
@@ -37,10 +39,9 @@ app.post('/api/blind', function (req, res) {
       .toString('hex');
     const bytes32 = `0x${hash}`;
 
-    // TODO:: figure this out. Does it make sense 
-    // to store it like this?
+    // TODO:: perhaps a better way can be found
     // 4. Store { Mapping ID, group type } tuple ???
-    console.log(bytes32, group);
+    mappings.push({ mappingId: bytes32, groupType: group });
 
     // 5. reply with success and Mapping ID
     res.status(200).json({ success: true, mappingId: bytes32 });
@@ -49,12 +50,18 @@ app.post('/api/blind', function (req, res) {
   }
 });
 
-// TODO:: this endpoint will theoretically be hit by an 
-// external service to know whether the patient is treatment
-// or control
 // check a mapping id if it is control or treatment
 app.get('/api/blind/:mappingId', function (req, res) {
-  res.status(200).json({ success: true, type: 'test-patient-id' });
+  try {
+    const mappingId = req.params.mappingId;
+    const mapping = mappings.find(_mapping => mappingId === _mapping.mappingId);
+    if (mapping) {
+      res.status(200).json({ success: true, mapping: mapping });
+    }
+    res.status(404).json({ success: false, error: 'Not found' });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
 });
 
 app.listen(PORT, () => {
