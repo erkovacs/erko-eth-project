@@ -77,14 +77,29 @@ const EnrollForm = () => {
     if (validateForm()) {
       try {
         const payload = serializeFields(state.fields);
-        await web3jsState.study.methods.enroll(payload).send();
-        const patientId = await web3jsState.study.methods.isPatientEnrolled(state.fields.account.value).call();
-        if (Bytes32_NULL !== patientId) {
-          addToast('Success', 'Successfully enrolled!');
-          setWeb3jsState({ isPatientEnrolled: true, patientId: patientId });
+        
+        const blindingMappingResponse = await fetch('/api/blind', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: payload
+        });
+
+        const blindingMapping = await blindingMappingResponse.json();
+
+        if (blindingMapping.success) {
+          const mappingId = blindingMapping.mappingId;
+
+          await web3jsState.study.methods.enroll(mappingId, payload).send();
+          const patientId = await web3jsState.study.methods.isPatientEnrolled(state.fields.account.value).call();
+
+          if (Bytes32_NULL !== patientId) {
+            addToast('Success', 'Successfully enrolled!');
+            setWeb3jsState({ isPatientEnrolled: true, patientId: patientId });
+          } else {
+            throw new Error(`Invalid patient ID returned: ${patientId}`);
+          }
         } else {
-          addToast('Error', `Invalid patient ID returned: ${patientId}`);
-          console.error(`Error: Invalid patient ID returned: ${patientId}`);
+          throw new Error(`Invalid mapping ID returned: ${blindingMapping.error}`);
         }
       } catch (e) {
         addToast('Error', e.message);

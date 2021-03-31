@@ -30,7 +30,13 @@ const Profile = props => {
       const result = await web3jsState.study.methods.getPatientData(web3jsState.account).call();
 
       if (typeof result[2] !== 'undefined' && result[2] !== '') {
-        const data = JSON.parse(result[2]);
+        patientData.mappingId = result[2];
+      } else {
+        throw new Error('Invalid result received.');
+      }
+
+      if (typeof result[3] !== 'undefined' && result[3] !== '') {
+        const data = JSON.parse(result[3]);
         const props = Object.keys(data);
         for(let prop of props) {
           patientData[prop] = data[prop];
@@ -71,6 +77,7 @@ const Profile = props => {
         <Table bordered hover responsive>
           <tbody>
             <tr><td><b>Patient ID</b></td><td>{web3jsState.patientId}</td></tr>
+            <tr><td><b>Mapping ID</b></td><td>{patientData.mappingId ? patientData.mappingId : '-'}</td></tr>
             <tr><td><b>Height</b></td><td>{patientData.height ? `${patientData.height} cm` : '-'}</td></tr>
             <tr><td><b>Weight</b></td><td>{patientData.weight ? `${patientData.weight} kg` : '-'}</td></tr>
             <tr><td><b>Age</b></td><td>{patientData.age ? `${patientData.age} years` : '-'}</td></tr>

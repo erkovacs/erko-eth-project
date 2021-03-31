@@ -3,8 +3,11 @@
   "version": "1.0.0",
   "description": "Etherium dApp project (decentralised double-blind study support app)",
   "main": "truffle-config.js",
+  "proxy": "http://localhost:5000",
   "scripts": {
-    "start": "react-scripts start",
+    "start": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "cd ./src/server/ && npm run start",
+    "client": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
