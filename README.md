@@ -35,7 +35,7 @@ At the end of the study, all active participants receive a monetary reward in Et
  - Open a terminal in the project root directory and issue the command `truffle migrate`
  - Verify in Ganache if the contracts are deployed (they should show up under the "Contracts" tab)
  - Import an account from Ganache (it gives you a lot of accounts with a lot of cash in them) into MetaMask. __DO NOT__ attempt to use these funds on a real network.
- - In the terminal in the project root directory, issue the command `npm run start`. This should open a React development server on localhost:3000
+ - In the terminal in the project root directory, issue the command `npm run start`. This should open a React development server on localhost:3000. This will launch both server and client apps
  - Access http://localhost:3000 from the browser with MetaMask Setup. If everything is set up correctly MetaMask should prompt you to connect to the site. Do so with the imported account!
 
 ## Usage
