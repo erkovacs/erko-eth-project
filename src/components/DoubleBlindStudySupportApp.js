@@ -58,7 +58,7 @@ const DoubleBlindStudySupportApp = props => {
           <br></br>
           <div className="row">
             <main role="main" className="col-lg-12 d-flex text-center">
-              <div className="content mr-auto ml-auto col-md-5">
+              <div className="content mr-auto ml-auto col-lg-8">
               { state.hasMetamask ? 
                   state.isMetamaskConnected ?
                   <Tabs activeKey={navTab} onSelect={key => setNavTab(key)} id="nav-tabs">
