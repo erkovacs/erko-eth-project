@@ -23,14 +23,12 @@ contract DoubleBlindStudy {
         _;
     }
 
-    enum Group {Treatment, Control}
-
     enum ReportType {TreatmentAdministration, Status}
 
     struct Patient {
         uint256 _id;
         bytes32 _patientId;
-        Group _group;
+        bytes32 _mappingId;
         string _data;
         uint256 _enrolledOn;
     }
@@ -85,24 +83,6 @@ contract DoubleBlindStudy {
     // helpers
 
     /*
-      returns a pseudorandom number
-      TODO:: refactor into something better
-    */
-    function _random(uint256 seed) private view returns (uint256) {
-        return
-            uint256(
-                keccak256(
-                    abi.encodePacked(
-                        block.difficulty,
-                        block.timestamp,
-                        msg.sender,
-                        seed
-                    )
-                )
-            );
-    }
-
-    /*
       The first transaction at or after
       the end date will deactivate the contract and
       conclude the study. Ran at the end of all public
@@ -144,6 +124,7 @@ contract DoubleBlindStudy {
         returns (
             uint256,
             bytes32,
+            bytes32,
             string memory,
             uint256
         )
@@ -153,6 +134,7 @@ contract DoubleBlindStudy {
         return (
             patient._id,
             patient._patientId,
+            patient._mappingId,
             patient._data,
             patient._enrolledOn
         );
@@ -161,7 +143,7 @@ contract DoubleBlindStudy {
     /*
       add a patient to the study
     */
-    function enroll(string memory _data)
+    function enroll(bytes32 _mappingId, string memory _data)
         public
         requireActive
         returns (bytes32)
@@ -172,20 +154,11 @@ contract DoubleBlindStudy {
         patients[patientId] = Patient(
             patientCount,
             patientId,
-            _assignToGroup(),
+            _mappingId,
             _data,
             ts
         );
         return patientId;
-    }
-
-    /*
-      assign patient to one of two groups - treatment or control
-    */
-    function _assignToGroup() private view returns (Group) {
-        uint256 seed = patientCount + reportCount;
-        uint256 randInt = _random(seed);
-        return randInt % 2 == 0 ? Group.Control : Group.Treatment;
     }
 
     /*
