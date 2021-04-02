@@ -1,6 +1,6 @@
 import { Alert, Button, Card, Form } from 'react-bootstrap'
 import React, { useState, useContext } from 'react';
-import { Bytes32_NULL, GENDERS } from '../constants';
+import { Bytes32_NULL, GENDERS, BLINDING_API } from '../constants';
 import { Web3Context } from './Web3Context';
 import { ToastContext } from './ToastContext';
 
@@ -78,7 +78,7 @@ const EnrollForm = () => {
       try {
         const payload = serializeFields(state.fields);
         
-        const blindingMappingResponse = await fetch('/api/blind', {
+        const blindingMappingResponse = await fetch(BLINDING_API.BLIND, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: payload
@@ -94,7 +94,7 @@ const EnrollForm = () => {
 
           if (Bytes32_NULL !== patientId) {
             addToast('Success', 'Successfully enrolled!');
-            setWeb3jsState({ isPatientEnrolled: true, patientId: patientId });
+            setWeb3jsState({ ...web3jsState, isPatientEnrolled: true, patientId: patientId });
           } else {
             throw new Error(`Invalid patient ID returned: ${patientId}`);
           }

@@ -28,3 +28,8 @@ export const EXT_DRUGSTORE_API = {
   VOUCHER: `${process.env.REACT_APP_EXT_DRUGSTORE_API}voucher`,
   ORDER: `${process.env.REACT_APP_EXT_DRUGSTORE_API}order`,
 };
+
+export const BLINDING_API = {
+  BASE_URL: process.env.REACT_APP_BLINDING_API,
+  BLIND: `${process.env.REACT_APP_BLINDING_API}blind`,
+};
