@@ -54,5 +54,8 @@
     "truffle": "5.1.63",
     "truffle-hdwallet-provider-privkey": "0.3.0",
     "web3": "1.2.6"
+  },
+  "devDependencies": {
+    "concurrently": "^6.0.0"
   }
 }
