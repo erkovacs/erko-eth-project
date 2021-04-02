@@ -1,18 +1,19 @@
-import React, { useState, useContext } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { Button, Card, Col, Form, Row } from 'react-bootstrap';
 import { OrderContext, OrderFactory, OrderStates } from './OrderContext';
 import { Web3Context } from './Web3Context';
 import { ToastContext } from './ToastContext';
+import { ProfileContext } from './ProfileContext';
 import { EXT_DRUGSTORE_API } from '../constants';
 
 const OrderForm = props => {
   const { web3jsState } = useContext(Web3Context);
   const [toast, addToast] = useContext(ToastContext);
   const [orders, setOrders] = useContext(OrderContext);
-  
+  const { patientData } = useContext(ProfileContext);
+
   const [submitting, setSubmitting] = useState(false);
 
-  // TODO:: set mapping ID here
   const FIELD_DEFAULTS = {
     mappingId: { value: '', label: 'Mapping ID', isValid: null, type: 'text', disabled: true },
     phone: { value: '', label: 'Phone', isValid: null, type: 'text' },
@@ -28,9 +29,15 @@ const OrderForm = props => {
     apartmentNumber: { value: '', label: 'Apartment number', isValid: null, type: 'text' },
     notes: { value: '', label: 'Notes', isValid: null, type: 'text' }
   };
-
+  
   // State for Treatment Administration Report
   const [fields, setFields] = useState(FIELD_DEFAULTS);
+  
+  useEffect(() => {
+    if (patientData.mappingId) {
+      handleChange('mappingId', { target: { value: patientData.mappingId } });
+    }
+  }, [patientData.mappingId]);
 
   const handleChange = (field, e) => {
 
@@ -51,6 +58,8 @@ const OrderForm = props => {
       case 'fax':
       case 'notes':
         return true;
+      case 'mappingId':
+        return /^0x[a-fA-F0-9]{64}$/g.test(value);
       default:
         return value !== null && value !== '';
     }
@@ -143,7 +152,6 @@ const OrderForm = props => {
               });
               
               setOrders(_orders);
-              
               setFields(FIELD_DEFAULTS);
               addToast('Success', 'Successfuly placed order!');
             } else {
@@ -194,8 +202,9 @@ const OrderForm = props => {
                         type={fields[field1].type}
                         value={fields[field1].value}
                         placeholder={fields[field1].label}
-                        onChange={e => handleChange(field1, e)} 
-                        disabled={orders.length > 0 || fields[field1].disabled}/>
+                        onChange={e => handleChange(field1, e)}
+                        disabled={orders.length > 0 || fields[field1].disabled}
+                        readOnly={fields[field1].disabled}/>
                     </Form.Group>
                   </Col> : '' }
                   { field2 ? <Col>
@@ -207,7 +216,8 @@ const OrderForm = props => {
                         value={fields[field2].value}
                         placeholder={fields[field2].label}
                         onChange={e => handleChange(field2, e)} 
-                        disabled={orders.length > 0 || fields[field2].disabled}/>
+                        disabled={orders.length > 0 || fields[field2].disabled}
+                        readOnly={fields[field2].disabled}/>
                     </Form.Group> 
                   </Col> : '' }
                 </Row>
