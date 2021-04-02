@@ -1,7 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const keccak = require('keccak');
 const dotenv = require('dotenv');
+const { hash, generateKey, encryptAES } = require('./utils');
 dotenv.config();
 
 const app = express();
@@ -17,15 +17,6 @@ const GROUPS = {
   TREATMENT: 'TREATMENT'
 }
 
-function hash (data) {
-  const hash = keccak('keccak256')
-    .update(data)
-    .digest()
-    .toString('hex');
-  const bytes32 = `0x${hash}`;
-  return bytes32;
-}
-
 if ('prod' === ENV) {
   app.use(express.static('./public/'));
 }
@@ -34,40 +25,46 @@ app.use(bodyParser.json());
 
 // Blind a patient when they enroll
 app.post('/api/blind', function (req, res) {
+  console.log(req.body);
   try {
-    // 1. Get user account
+    // 1. Get patient account and validate
     const account = req.body.account;
+    if (!/^0x[a-fA-F0-9]{40}$/g.test(account)) {
+      res.status(401).json({ success: false, error: 'Invalid account format. Please use a standard ETH address for the account.' });
+      return;
+    }
 
-    const groups = [ GROUPS.CONTROL, GROUPS.TREATMENT ];
-
-    // 2. Generate Mapping ID = keccak256(patient ID, group ID)
-    const hashes = groups.map(group => hash(`${account}${group}`));
-
-    // Find if we already have it...
-    const mapping = mappings.find(_mapping => {
-      return hashes[0] === _mapping.mappingId || hashes[1] === _mapping.mappingId;
-    });
+    const mapping = mappings.find(_mapping => account === _mapping.account);
 
     if (mapping) {
-      res.status(500).json({ success: false, error: 'Already enrolled!', mappingId: mapping.mappingId });
-    } else {
+      res.status(400).json({ success: false, error: 'Already enrolled!' });
+      return;
+    } 
+       
+    const groups = [ GROUPS.CONTROL, GROUPS.TREATMENT ];
 
-      // 2. Fair coin toss to add user to Treatment or Control
-      const random = Math.floor(Math.random() * 2);
-      const i = random % 2 === 0 ? 0 : 1;
+    // Generate a random AES key. It will be discarded afterwards
+    const key = generateKey();
 
-      // TODO:: perhaps a better way can be found. This can easily be bruteforced
-      // 4. Store { Mapping ID, group type } tuple ???
-      mappings.push({ mappingId: hashes[i], groupType: groups[i] });
+    // 2. Generate Mapping ID = keccak256(AES(keccak256(patient ID + group ID)))
+    const hashes = groups.map(group => hash(`${account}${group}`), key);
+    const mappingIds = hashes.map(_hash => hash(encryptAES(_hash, key)));
 
-      // 5. reply with success and Mapping ID
-      res.status(200).json({ success: true, mappingId: hashes[i] });
-    }
+    // 3. Fair coin toss to add user to Treatment or Control
+    const random = Math.floor(Math.random() * 2);
+    const i = random % 2 === 0 ? 0 : 1;
+    
+    // 4. Store { mapping ID, account, group type } tuple
+    mappings.push({ mappingId: mappingIds[i], account: account, groupType: groups[i] });
+
+    // 5. reply with success and Mapping ID
+    res.status(200).json({ success: true, mappingId: mappingIds[i] });
   } catch (e) {
     res.status(500).json({ success: false, error: e.message });
   }
 });
 
+// Only allow authorised third party to access /blind/<mappingId> endpoint
 app.use(function (req, res, next) {
   const key = req.get('Api-Key');
   if (KEYS.indexOf(key) === -1) {
@@ -82,9 +79,11 @@ app.get('/api/blind/:mappingId', function (req, res) {
     const mappingId = req.params.mappingId;
     const mapping = mappings.find(_mapping => mappingId === _mapping.mappingId);
     if (mapping) {
-      res.status(200).json({ success: true, mapping: mapping });
+      const { groupType } = mapping;
+      res.status(200).json({ success: true, groupType: groupType });
+    } else {
+      res.status(404).json({ success: false, error: 'Not found' });
     }
-    res.status(404).json({ success: false, error: 'Not found' });
   } catch (e) {
     res.status(500).json({ success: false, error: e.message });
   }

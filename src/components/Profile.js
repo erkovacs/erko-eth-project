@@ -18,6 +18,7 @@ const Profile = props => {
     })();
   }, []);
 
+  // TODO:: move into provider
   const getPatientData = async () => {
     const patientData = {};
     
@@ -45,9 +46,9 @@ const Profile = props => {
         throw new Error('Invalid result received.');
       }
 
-      if (typeof result[3] !== 'undefined' && result[3] !== '') {
+      if (typeof result[4] !== 'undefined' && result[4] !== '') {
         let ts = 0;
-        ts = parseInt(result[3]);
+        ts = parseInt(result[4]);
         if(isNaN(ts)) {
           ts = 0;
         }
