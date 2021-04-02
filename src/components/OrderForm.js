@@ -12,7 +12,9 @@ const OrderForm = props => {
   
   const [submitting, setSubmitting] = useState(false);
 
+  // TODO:: set mapping ID here
   const FIELD_DEFAULTS = {
+    mappingId: { value: '', label: 'Mapping ID', isValid: null, type: 'text', disabled: true },
     phone: { value: '', label: 'Phone', isValid: null, type: 'text' },
     fax: { value: '', label: 'Fax', isValid: null, type: 'text' },
     county: { value: '', label: 'County', isValid: null, type: 'text' },
@@ -172,6 +174,7 @@ const OrderForm = props => {
             <br></br>
             <React.Fragment>
               {[
+                [ 'mappingId' ],
                 [ 'phone',    'fax' ],
                 [ 'county' ],
                 [ 'locality', 'code' ],
@@ -192,7 +195,7 @@ const OrderForm = props => {
                         value={fields[field1].value}
                         placeholder={fields[field1].label}
                         onChange={e => handleChange(field1, e)} 
-                        disabled={orders.length > 0}/>
+                        disabled={orders.length > 0 || fields[field1].disabled}/>
                     </Form.Group>
                   </Col> : '' }
                   { field2 ? <Col>
@@ -204,7 +207,7 @@ const OrderForm = props => {
                         value={fields[field2].value}
                         placeholder={fields[field2].label}
                         onChange={e => handleChange(field2, e)} 
-                        disabled={orders.length > 0}/>
+                        disabled={orders.length > 0 || fields[field2].disabled}/>
                     </Form.Group> 
                   </Col> : '' }
                 </Row>
