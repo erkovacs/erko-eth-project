@@ -25,7 +25,6 @@ app.use(bodyParser.json());
 
 // Blind a patient when they enroll
 app.post('/api/blind', function (req, res) {
-  console.log(req.body);
   try {
     // 1. Get patient account and validate
     const account = req.body.account;

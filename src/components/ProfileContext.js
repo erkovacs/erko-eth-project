@@ -10,10 +10,12 @@ export const ProfileProvider = props => {
   const [patientData, setPatientData] = useState({});
 
   useEffect(() => {
-    (async () => {
-      const patientData = await getPatientData();
-      setPatientData(patientData);
-    })();
+    if (web3jsState.isPatientEnrolled) {
+      (async () => {
+        const patientData = await getPatientData();
+        setPatientData(patientData);
+      })();
+    }
   }, [web3jsState.isPatientEnrolled]);
 
   const getPatientData = async () => {
