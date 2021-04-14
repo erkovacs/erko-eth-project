@@ -18,14 +18,12 @@ At the end of the study, all active participants receive a monetary reward in Et
 - Truffle suite installed globally (`npm install truffle --global`)
 
 ### Clone the repository
-`mkdir double-blind-study-app`
-
-`cd double-blind-study-app`
-
-`git clone https://github.com/erkovacs/erko-eth-project.git .`
+ - Create directory `mkdir double-blind-study-app`
+ - Enter directory `cd double-blind-study-app`
+ - Clone repo `git clone https://github.com/erkovacs/erko-eth-project.git .`
 
 ### Install dependecies
-`npm install`
+ - `npm install`
 
 ### Setup dev environment
  - Open Ganache
