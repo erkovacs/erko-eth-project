@@ -33,7 +33,7 @@ export const OrderProvider = props => {
   const [orders, setOrders] = useState([]);
 
   useEffect(() => {
-    if (!web3jsState.study) {
+    if (!web3jsState.study || !web3jsState.isStudyActive) {
       return;
     }
     (async () => {

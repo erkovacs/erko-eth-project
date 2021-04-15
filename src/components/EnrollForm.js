@@ -133,58 +133,62 @@ const EnrollForm = () => {
               </Form.Text>
             </Form.Group>
 
-            <Form.Text className="card-title h5">Patient parameters</Form.Text>
-            
-            <Form.Group controlId="height">
-              <Form.Label>Height (cm): </Form.Label>
-              <Form.Control 
-                isInvalid={state.fields.height.isValid === false} 
-                isValid={state.fields.height.isValid === true} 
-                type="number" 
-                value={state.fields.height.value} 
-                onChange={e => handleChange('height', e)} />
-            </Form.Group>
-            <Form.Group controlId="weight">
-              <Form.Label>Weight (kg): </Form.Label>
-              <Form.Control 
-                isInvalid={state.fields.weight.isValid === false} 
-                isValid={state.fields.weight.isValid === true} 
-                type="number" 
-                value={state.fields.weight.value} 
-                onChange={e => handleChange('weight', e)} />
-            </Form.Group>
+            { web3jsState.isStudyActive ? 
+              <React.Fragment>
+                <Form.Text className="card-title h5">Patient parameters</Form.Text>
+                
+                <Form.Group controlId="height">
+                  <Form.Label>Height (cm): </Form.Label>
+                  <Form.Control 
+                    isInvalid={state.fields.height.isValid === false} 
+                    isValid={state.fields.height.isValid === true} 
+                    type="number" 
+                    value={state.fields.height.value} 
+                    onChange={e => handleChange('height', e)} />
+                </Form.Group>
+                <Form.Group controlId="weight">
+                  <Form.Label>Weight (kg): </Form.Label>
+                  <Form.Control 
+                    isInvalid={state.fields.weight.isValid === false} 
+                    isValid={state.fields.weight.isValid === true} 
+                    type="number" 
+                    value={state.fields.weight.value} 
+                    onChange={e => handleChange('weight', e)} />
+                </Form.Group>
 
-            <Form.Text className="text-muted">
-                Please use metric units
-            </Form.Text>
+                <Form.Text className="text-muted">
+                    Please use metric units
+                </Form.Text>
 
-            <Form.Group controlId="age">
-              <Form.Label>Age: </Form.Label>
-              <Form.Control 
-                isInvalid={state.fields.age.isValid === false} 
-                isValid={state.fields.age.isValid === true} 
-                type="number" 
-                value={state.fields.age.value} 
-                onChange={e => handleChange('age', e)} />
-            </Form.Group>
+                <Form.Group controlId="age">
+                  <Form.Label>Age: </Form.Label>
+                  <Form.Control 
+                    isInvalid={state.fields.age.isValid === false} 
+                    isValid={state.fields.age.isValid === true} 
+                    type="number" 
+                    value={state.fields.age.value} 
+                    onChange={e => handleChange('age', e)} />
+                </Form.Group>
 
-            <Form.Group controlId="gender">
-              <Form.Label>Gender: </Form.Label>
-              { GENDERS.map(gender => {
-                return (<Form.Check 
-                  type="radio" 
-                  label={gender} 
-                  value={gender} 
-                  key={`gender_${gender}`} 
-                  id="gender"
-                  name="gender" 
-                  onChange={e => handleChange('gender', e)}/>)
-              }) }
-            </Form.Group>
+                <Form.Group controlId="gender">
+                  <Form.Label>Gender: </Form.Label>
+                  { GENDERS.map(gender => {
+                    return (<Form.Check 
+                      type="radio" 
+                      label={gender} 
+                      value={gender} 
+                      key={`gender_${gender}`} 
+                      id="gender"
+                      name="gender" 
+                      onChange={e => handleChange('gender', e)}/>)
+                  }) }
+                </Form.Group>
 
-            <Button variant="primary" type="submit" disabled={submitting === true} onClick={e => onSubmit(e)}>
-              Enroll
-            </Button>
+                <Button variant="primary" type="submit" disabled={submitting === true} onClick={e => onSubmit(e)}>
+                  Enroll
+                </Button>
+              </React.Fragment> : null
+            }
           </Form>
         </Card.Body>
       </Card>
