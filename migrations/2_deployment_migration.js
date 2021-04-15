@@ -7,12 +7,10 @@ module.exports = async function (deployer, network, accounts) {
   const token = await Token.deployed();
 
   // Deployer is owner of contract
-  const userAddress = accounts[0];
-  
   // UNIX timestamp for start of study
-  const startDate = Math.round(Date.now() / 1000);
-  
   // duration of study in seconds
+  const userAddress = accounts[0];
+  const startDate = Math.round(Date.now() / 1000);
   const duration = 60 * 10;
 
   // Deploy study

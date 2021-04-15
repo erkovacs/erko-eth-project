@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.6.0 <0.8.0;
+pragma solidity >=0.7.4 <0.8.0;
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
 
 contract Token is ERC20 {
     address public minter;
@@ -11,7 +11,7 @@ contract Token is ERC20 {
     constructor()
         public
         payable
-        ERC20("Biomedical Research Reward Token", "MED")
+        ERC20('Biomedical Research Reward Token', 'MED')
     {
         minter = msg.sender;
     }
@@ -19,7 +19,7 @@ contract Token is ERC20 {
     function setMinter(address _minter) public returns (bool) {
         require(
             msg.sender == minter,
-            "Error: only minter can change minter address"
+            'Error: only minter can change minter address'
         );
         minter = _minter;
 
@@ -28,7 +28,7 @@ contract Token is ERC20 {
     }
 
     function mint(address account, uint256 amount) public {
-        require(msg.sender == minter, "Error: only minter can call mint()");
+        require(msg.sender == minter, 'Error: only minter can call mint()');
         _mint(account, amount);
     }
 }
