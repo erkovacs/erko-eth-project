@@ -67,6 +67,8 @@ export const Web3Provider = props => {
         const isOwner = await study.methods.isOwner().call();
         const isConcluded = await study.methods.isConcluded().call();
 
+        console.log(isConcluded);
+
         // Subscribe to events
         await study.once('StudyActivated', {}, (error, event) => setState({...state, isStudyActive: true}))
         await study.once('StudyConcluded', {}, (error, event) => setState({...state, isStudyActive: false}))

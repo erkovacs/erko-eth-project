@@ -23,7 +23,6 @@ contract DoubleBlindStudy {
     bool public active;
 
     event StudyActivated(uint256 ts);
-
     event StudyConcluded(uint256 ts, string reason);
 
     modifier requireOwner {
@@ -41,7 +40,7 @@ contract DoubleBlindStudy {
 
     modifier requireConcluded {
         require(
-            !active && (endDate <= block.timestamp),
+            !active /*&& (endDate <= block.timestamp)*/,
             'Error: study has not yet been concluded'
         );
         _;
@@ -55,6 +54,7 @@ contract DoubleBlindStudy {
         bytes32 _mappingId;
         string _data;
         uint256 _enrolledOn;
+        bool _hasBeenRewarded;
     }
 
     struct Order {
@@ -75,9 +75,8 @@ contract DoubleBlindStudy {
     /*
       the deployer of the contract is the study owner
       
-      they must provide address of a wallet with sufficient 
-      funds to finance expenses related to the study, called 
-      the pot
+      rewards will be distributed out of the pot, which 
+      is an ERC20 compliant token
       
       for miscellaneous transactions the patients are
       expected to pay by themselves but this is mitigated
@@ -175,7 +174,8 @@ contract DoubleBlindStudy {
             patientId,
             _mappingId,
             _data,
-            ts
+            ts, 
+            false
         );
         return patientId;
     }
@@ -253,31 +253,30 @@ contract DoubleBlindStudy {
         emit StudyConcluded(block.timestamp, reason);
     }
 
+    /*
+      returns whether the study has concluded
+    */
     function isConcluded() public view returns (bool) {
-        return !active && (endDate <= block.timestamp);
+        return !active; //&& (endDate <= block.timestamp);
     }
 
+    /*
+      called in order to distribute the reward to the
+      caller 
+    */
     function claimReward() public requireConcluded {
         bytes32 patientId = _getHash(msg.sender);
-        if (patients[patientId]._patientId != 0) {
-            uint256 orderScore = 0;
-            uint256 reportScore = 0;
-            uint256 score = 0;
-            for (uint256 i = 0; i < orderCount; i++) {
-                if (patientId == orders[i]._patientId) {
-                    orderScore++;
-                }
+        
+        require(patients[patientId]._patientId != 0, 'Error: patient has not been part of the study');
+        require(!patients[patientId]._hasBeenRewarded, 'Error: patient has already been rewarded');
+        
+        uint256 score = 100;
+        for (uint256 i = 0; i < reportCount; i++) {
+            if (patientId == reports[i]._patientId) {
+                score += 10;
             }
-            for (uint256 i = 0; i < reportCount; i++) {
-                if (patientId == reports[i]._patientId) {
-                    reportScore++;
-                }
-            }
-            // TODO:: calculate final score
-            score = orderScore + reportScore;
-            pot.mint(msg.sender, score);
-        } else {
-            require(false, 'Error: patient has not been part of the study');
         }
+        pot.mint(msg.sender, score);
+        patients[patientId]._hasBeenRewarded = true;
     }
 }

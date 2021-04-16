@@ -14,6 +14,7 @@ contract Token is ERC20 {
         ERC20('Biomedical Research Reward Token', 'MED')
     {
         minter = msg.sender;
+        _setupDecimals(0);
     }
 
     function setMinter(address _minter) public returns (bool) {
@@ -27,7 +28,7 @@ contract Token is ERC20 {
         return true;
     }
 
-    function mint(address account, uint256 amount) public {
+    function mint(address payable account, uint256 amount) public {
         require(msg.sender == minter, 'Error: only minter can call mint()');
         _mint(account, amount);
     }
