@@ -22,15 +22,27 @@ contract DoubleBlindStudy {
 
     bool public active;
 
+    event StudyActivated(uint256 ts);
+
+    event StudyConcluded(uint256 ts, string reason);
+
+    modifier requireOwner {
+        require(
+            msg.sender == owner,
+            'Error: only the owner can conclude the study'
+        );
+        _;
+    }
+
     modifier requireActive {
-        require(active, "Error: study is not active");
+        require(active, 'Error: study is not active');
         _;
     }
 
     modifier requireConcluded {
         require(
             !active && block.timestamp <= endDate,
-            "Error: study has not yet been concluded"
+            'Error: study has not yet been concluded'
         );
         _;
     }
@@ -61,9 +73,9 @@ contract DoubleBlindStudy {
     }
 
     /*
-      the deployer of the contract is the study monitor
+      the deployer of the contract is the study owner
       
-      they should provide address of a wallet with sufficient 
+      they must provide address of a wallet with sufficient 
       funds to finance expenses related to the study, called 
       the pot
       
@@ -90,24 +102,10 @@ contract DoubleBlindStudy {
         reportCount = 0;
         orderCount = 0;
 
-        // TODO:: deal with the logic here
-        active = true;
+        active = (startDate <= block.timestamp);
     }
 
     // helpers
-
-    /*
-      The first transaction at or after
-      the end date will deactivate the contract and
-      conclude the study. Ran at the end of all public
-      calls to the contract
-    */
-    function _checkIfEnded() private {
-        if (block.timestamp > endDate) {
-            active = false;
-            // _concludeStudy();
-        }
-    }
 
     function _getHash(address payable _address) private view returns (bytes32) {
         return keccak256(abi.encodePacked(_address));
@@ -115,13 +113,21 @@ contract DoubleBlindStudy {
 
     // business logic
 
+    function isOwner() public view returns (bool) {
+        return msg.sender == owner;
+    }
+
+    function activate() public requireOwner {
+        active = true;
+        emit StudyActivated(block.timestamp);
+    }
+
     /*
       Returns whether the specified patient is enrolled
     */
     function isPatientEnrolled(address payable _address)
         public
         view
-        requireActive
         returns (bytes32)
     {
         bytes32 patientId = _getHash(_address);
@@ -134,7 +140,6 @@ contract DoubleBlindStudy {
     function getPatientData(address payable _address)
         public
         view
-        requireActive
         returns (
             uint256,
             bytes32,
@@ -243,12 +248,9 @@ contract DoubleBlindStudy {
     /*
       fired at the end of the study (on or after endDate)
     */
-    function conclude(string memory reason) public requireActive {
-        require(
-            msg.sender == owner,
-            "Error: only the owner can conclude the study."
-        );
+    function conclude(string memory reason) public requireOwner requireActive {
         active = false;
+        emit StudyConcluded(block.timestamp, reason);
     }
 
     function claimReward() public requireConcluded {
@@ -271,7 +273,7 @@ contract DoubleBlindStudy {
             score = orderScore + reportScore;
             pot.mint(msg.sender, score);
         } else {
-            require(false, "Error: patient has not been part of the study");
+            require(false, 'Error: patient has not been part of the study');
         }
     }
 }

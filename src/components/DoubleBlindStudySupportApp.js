@@ -6,6 +6,7 @@ import OrderForm from './OrderForm';
 import OrderList from './OrderList';
 import ReportForm from './ReportForm';
 import ClaimReward from './ClaimReward';
+import Admin from './Admin';
 import { Web3Context } from './Web3Context';
 import { ToastContext } from './ToastContext';
 import { TITLE } from '../constants';
@@ -28,8 +29,12 @@ const DoubleBlindStudySupportApp = props => {
   }, [web3jsState, web3jsState.hasMetamask, web3jsState.isMetamaskConnected]);
 
   useEffect(() => {
-    setNavTab(state.isPatientEnrolled ? 'Profile' : 'Enroll');
-  }, [state.isPatientEnrolled]);
+    if (state.isOwner) {
+      setNavTab('Admin');
+    } else {
+      setNavTab(state.isPatientEnrolled ? 'Profile' : 'Enroll');
+    }
+  }, [state.isOwner, state.isPatientEnrolled]);
 
   return (
       <React.Fragment>
@@ -59,15 +64,18 @@ const DoubleBlindStudySupportApp = props => {
           <div className="row">
             <main role="main" className="col-lg-12 d-flex text-center">
               <div className="content mr-auto ml-auto col-lg-5">
-              { !state.isStudyActive ? 
+              { !state.isStudyActive && !state.isOwner ? 
                 <Alert variant="warning">
                   Study is not yet active. Please check back soon!
                 </Alert> : null }
 
               { state.hasMetamask ? 
                   state.isMetamaskConnected ?
-                    <Tabs activeKey={navTab} onSelect={key => setNavTab(key)} id="nav-tabs">
-                        <Tab eventKey="Enroll" title="Enroll" disabled={state.isPatientEnrolled}>
+                    state.isOwner ?
+                      <Admin />
+                      : 
+                      <Tabs activeKey={navTab} onSelect={key => setNavTab(key)} id="nav-tabs">
+                        <Tab eventKey="Enroll" title="Enroll" disabled={state.isPatientEnrolled || state.isOwner}>
                           <EnrollForm />
                         </Tab>
                         <Tab eventKey="Profile" title="Profile" disabled={!state.isPatientEnrolled}>
@@ -86,11 +94,13 @@ const DoubleBlindStudySupportApp = props => {
                           <ClaimReward />
                         </Tab>
                       </Tabs> :
+
                       <p>Welcome to {TITLE}! This is a Blockchain-enabled website.<br></br><br></br>
                         <Button variant="primary" type="submit" onClick={() => connectMetamask()}>
                           Connect with MetaMask
                         </Button>
                       </p>  :
+
                       <p>Welcome to {TITLE}! This is a Blockchain-enabled website. Please connect with <a href="https://metamask.io/">MetaMask</a></p> 
               }
               </div>
