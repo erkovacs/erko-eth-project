@@ -41,7 +41,7 @@ contract DoubleBlindStudy {
 
     modifier requireConcluded {
         require(
-            !active && block.timestamp <= endDate,
+            !active && (endDate <= block.timestamp),
             'Error: study has not yet been concluded'
         );
         _;
@@ -251,6 +251,10 @@ contract DoubleBlindStudy {
     function conclude(string memory reason) public requireOwner requireActive {
         active = false;
         emit StudyConcluded(block.timestamp, reason);
+    }
+
+    function isConcluded() public view returns (bool) {
+        return !active && (endDate <= block.timestamp);
     }
 
     function claimReward() public requireConcluded {

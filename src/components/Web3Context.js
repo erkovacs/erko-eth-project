@@ -59,15 +59,17 @@ export const Web3Provider = props => {
         let patientId, isPatientEnrolled;
         const isStudyActive = await study.methods.active().call();
 
-        const isOwner = await study.methods.isOwner().call();
-
+        
         // Check if we are enrolled
         patientId = await study.methods.isPatientEnrolled(account).call();
         isPatientEnrolled =  Bytes32_NULL !== patientId;
+        
+        const isOwner = await study.methods.isOwner().call();
+        const isConcluded = await study.methods.isConcluded().call();
 
         // Subscribe to events
-        study.once('StudyActivated', {}, (error, event) => setState({...state, isStudyActive: true}))
-        study.once('StudyConcluded', {}, (error, event) => setState({...state, isStudyActive: false}))
+        await study.once('StudyActivated', {}, (error, event) => setState({...state, isStudyActive: true}))
+        await study.once('StudyConcluded', {}, (error, event) => setState({...state, isStudyActive: false}))
 
         setState({
           hasMetamask: true,
@@ -76,9 +78,10 @@ export const Web3Provider = props => {
           study: study,
           isStudyActive: isStudyActive,
           account: account,
-          isOwner: isOwner,
           isMetamaskConnected: isMetamaskConnected,
           isPatientEnrolled: isPatientEnrolled,
+          isOwner: isOwner,
+          isStudyConcluded: isConcluded,
           patientId: patientId
         });
       } catch (e) {

@@ -31,6 +31,8 @@ const DoubleBlindStudySupportApp = props => {
   useEffect(() => {
     if (state.isOwner) {
       setNavTab('Admin');
+    } else if (state.isStudyConcluded) {
+      setNavTab('Claim_reward');
     } else {
       setNavTab(state.isPatientEnrolled ? 'Profile' : 'Enroll');
     }
@@ -79,16 +81,16 @@ const DoubleBlindStudySupportApp = props => {
                         <Tab eventKey="Enroll" title="Enroll" disabled={state.isPatientEnrolled || state.isOwner}>
                           <EnrollForm />
                         </Tab>
-                        <Tab eventKey="Profile" title="Profile" disabled={!state.isPatientEnrolled}>
+                        <Tab eventKey="Profile" title="Profile" disabled={!state.isPatientEnrolled || state.isStudyConcluded}>
                           <Profile />
                         </Tab>
-                        <Tab eventKey="Order" title="Order" disabled={!state.isPatientEnrolled}>
+                        <Tab eventKey="Order" title="Order" disabled={!state.isPatientEnrolled || state.isStudyConcluded}>
                           <OrderForm />
                         </Tab>
-                        <Tab eventKey="My_orders" title="My Orders" disabled={!state.isPatientEnrolled}>
+                        <Tab eventKey="My_orders" title="My Orders" disabled={!state.isPatientEnrolled || state.isStudyConcluded}>
                           <OrderList setNavTab={setNavTab} setReportType={setReportType} />
                         </Tab>
-                        <Tab eventKey="Report" title="Report" disabled={!state.isPatientEnrolled}>
+                        <Tab eventKey="Report" title="Report" disabled={!state.isPatientEnrolled || state.isStudyConcluded}>
                           <ReportForm reportType={reportType} setReportType={setReportType}/>
                         </Tab>
                         <Tab eventKey="Claim_reward" title="Claim reward" disabled={!state.isStudyConcluded}>
