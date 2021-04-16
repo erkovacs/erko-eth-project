@@ -64,7 +64,8 @@ const DoubleBlindStudySupportApp = props => {
           <div className="row">
             <main role="main" className="col-lg-12 d-flex text-center">
               <div className="content mr-auto ml-auto col-lg-5">
-              { !state.isStudyActive && !state.isOwner ? 
+              { state.hasMetamask && state.isMetamaskConnected && 
+              !state.isStudyActive && !state.isOwner ? 
                 <Alert variant="warning">
                   Study is not yet active. Please check back soon!
                 </Alert> : null }

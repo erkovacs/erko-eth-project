@@ -38,9 +38,10 @@ const Admin = props => {
     setAction(_action);
   }
 
-  const handleActivateStudy = () => {
+  const handleActivateStudy = async () => {
     try {
-      web3jsState.study.methods.activate().send();
+      await web3jsState.study.methods.activate().send();
+      addToast('Success', 'Study successfully activated');
     } catch (e) {
       addToast('Error', e.message);
     }
@@ -50,22 +51,17 @@ const Admin = props => {
     const message = JSON.stringify({ reason });
     try {
       await web3jsState.study.methods.conclude(message).send();
+      addToast('Success', 'Study successfully concluded');
     } catch (e) {
       addToast('Error', e.message);
     }
   }
 
-  const handleConcludeStudy = () => {
-    conclude('Study concluded successfully');
-  }
+  const handleConcludeStudy = () => conclude('Study concluded successfully');
 
-  const handleStopForEfficiency = () => {
-    conclude('Study stopped for efficiency');
-  }
+  const handleStopForEfficiency = () => conclude('Study stopped for efficiency');
 
-  const handleStopForSafety = () => {
-    conclude('Study stopped for safety');
-  }
+  const handleStopForSafety = () => conclude('Study stopped for safety');
 
   return (
     <div>
@@ -79,24 +75,24 @@ const Admin = props => {
         </Card.Body>
         <Card.Body>
           <h1>TODO:: Add some graphs</h1>
-          <h3>
+          <h4>
             Study status <Badge variant={web3jsState.isStudyActive ? 'success' : 'warning'}>{web3jsState.isStudyActive ? 'Active' : 'Inactive'}</Badge>
-          </h3>
+          </h4>
           <Table bordered responsive>
             <tbody>
               <tr>
                 <td>Activate study </td>
-                <td><Button variant="success" disabled={web3jsState.isStudyActive} onClick={() => handleShow('handleActivateStudy')}>Activate study</Button></td>
+                <td><Button variant="primary" disabled={web3jsState.isStudyActive} onClick={() => handleShow('handleActivateStudy')}>Activate study</Button></td>
               </tr>
               <tr>
                 <td>Conclude study </td>
-                <td><Button variant="success" disabled={!web3jsState.isStudyActive} onClick={() => handleShow('handleConcludeStudy')}>Conclude study</Button></td>
+                <td><Button variant="primary" disabled={!web3jsState.isStudyActive} onClick={() => handleShow('handleConcludeStudy')}>Conclude study</Button></td>
               </tr>
             </tbody>
           </Table>
-          <h3>
+          <h4>
             Exceptional actions
-            </h3>
+            </h4>
           <Table bordered responsive>
             <tbody>
               <tr>
