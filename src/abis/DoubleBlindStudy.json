@@ -15928,12 +15928,21 @@
     "5777": {
       "events": {},
       "links": {},
+<<<<<<< HEAD
       "address": "0x0FE760141FEb078B0455c4eED928fB36c070A86c",
       "transactionHash": "0x7b0a3f2fcced80aa2e005c56563d9945e9f04529001086b97109811bc586a51d"
     }
   },
   "schemaVersion": "3.3.4",
   "updatedAt": "2021-05-12T20:28:01.394Z",
+=======
+      "address": "0xD4bA3f77680A6fE61D6ABF00C0A3Ee47dEAC270e",
+      "transactionHash": "0x358c4bae1c0f14835ddbf4c70e453fa56145d4a5a9fd5d0afaac8cd04fa58a67"
+    }
+  },
+  "schemaVersion": "3.3.4",
+  "updatedAt": "2021-04-02T17:39:39.294Z",
+>>>>>>> 9ea53fc052e8e6f343a3a774a417ff40a24ebda1
   "networkType": "ethereum",
   "devdoc": {
     "kind": "dev",

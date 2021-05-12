@@ -210,9 +210,9 @@ const ReportForm = props => {
               </Form.Control>
             </Form.Group>
             
-            <Form.Text className="text-muted">
+            { reportType.value ? <Form.Text className="text-muted">
                 Please use metric units
-            </Form.Text>
+            </Form.Text> : null }
 
             {
             REPORT_TYPES.TREATMENT_ADMINISTRATION_REPORT.value === reportType.value ? 
