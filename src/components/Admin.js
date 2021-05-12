@@ -10,6 +10,9 @@ const Admin = props => {
   const [show, setShow] = useState(false);
   const [action, setAction] = useState('nop');
 
+  // TODO :: pull in reports
+  // TODO :: show graphs
+
   const handleClose = _action => {
     setShow(false);
     switch (_action) {

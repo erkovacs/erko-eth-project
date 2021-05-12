@@ -1,10 +1,10 @@
 const DoubleBlindStudy = artifacts.require("DoubleBlindStudy");
-const Token = artifacts.require("Token");
+const MEDToken = artifacts.require("MEDToken");
 
 module.exports = async function (deployer, network, accounts) {
-  // Deploy token
-  await deployer.deploy(Token);
-  const token = await Token.deployed();
+  // Deploy MED token
+  await deployer.deploy(MEDToken);
+  const token = await MEDToken.deployed();
 
   // Deployer is owner of contract
   // UNIX timestamp for start of study

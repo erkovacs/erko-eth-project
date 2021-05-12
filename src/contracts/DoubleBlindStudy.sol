@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.7.4;
 
-import './Token.sol';
+import './MEDToken.sol';
 
 contract DoubleBlindStudy {
     address private owner;
-    Token private pot;
+    MEDToken private pot;
     uint256 private startDate;
     uint256 private endDate;
     uint256 private duration;
@@ -87,7 +87,7 @@ contract DoubleBlindStudy {
     */
     constructor(
         address _owner,
-        Token _pot,
+        MEDToken _pot,
         uint256 _startDate,
         uint256 _duration
     ) {

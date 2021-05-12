@@ -3,7 +3,7 @@ pragma solidity >=0.7.4 <0.8.0;
 
 import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
 
-contract Token is ERC20 {
+contract MEDToken is ERC20 {
     address public minter;
 
     event MinterChanged(address indexed from, address to);
