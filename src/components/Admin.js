@@ -1,5 +1,6 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { Badge, Button, Card, Table, Modal } from 'react-bootstrap';
+import { Chart } from 'react-charts';
 import { Web3Context } from './Web3Context';
 import { ToastContext } from './ToastContext';
 
@@ -8,10 +9,48 @@ const Admin = props => {
   const { web3jsState } = useContext(Web3Context);
   const [toasts, addToast] = useContext(ToastContext);
   const [show, setShow] = useState(false);
+  const [reports, setReports] = useState([]);
   const [action, setAction] = useState('nop');
 
-  // TODO :: pull in reports
-  // TODO :: show graphs
+  // TODO:: make these show actual report data
+  const data = React.useMemo(
+    () => [
+      {
+        label: 'Series 1',
+        data: [[0, 1], [1, 2], [2, 4], [3, 2], [4, 7]]
+      },
+      {
+        label: 'Series 2',
+        data: [[0, 3], [1, 1], [2, 5], [3, 6], [4, 4]]
+      }
+    ],
+    []
+  )
+  // TODO:: make these show actual report data
+  const axes = React.useMemo(
+    () => [
+      { primary: true, type: 'linear', position: 'bottom' },
+      { type: 'linear', position: 'left' }
+    ],
+    []
+  )
+  
+  useEffect(() => {
+    (async () => {
+      const count = await web3jsState.study.methods.getReportCount().call();
+      for (let i = 1; i <= count; i++) {
+        const reportRaw = await web3jsState.study.methods.getReport(i).call();
+        const report = {
+          id: reportRaw[0],
+          data: JSON.parse(reportRaw[3]),
+          ts: parseInt(reportRaw[4])
+        };
+        const reportsCopy = reports;
+        reportsCopy.push(report);
+        setReports(reportsCopy);
+      }
+    })();
+  }, []);
 
   const handleClose = _action => {
     setShow(false);
@@ -75,7 +114,14 @@ const Admin = props => {
           </Card.Text>
         </Card.Body>
         <Card.Body>
-          <h1>TODO:: Add some graphs</h1>
+          <div
+            style={{
+              width: '600px',
+              height: '300px'
+            }}
+          >
+            <Chart data={data} axes={axes} />
+          </div>
           <h4>
             Study status <Badge variant={web3jsState.isStudyActive ? 'success' : 'warning'}>{web3jsState.isStudyActive ? 'Active' : 'Inactive'}</Badge>
           </h4>

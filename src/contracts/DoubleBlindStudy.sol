@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.7.4;
 
-import './MEDToken.sol';
+import "./MEDToken.sol";
 
 contract DoubleBlindStudy {
     address private owner;
@@ -28,20 +28,20 @@ contract DoubleBlindStudy {
     modifier requireOwner {
         require(
             msg.sender == owner,
-            'Error: only the owner can conclude the study'
+            "Error: only the owner can conclude the study"
         );
         _;
     }
 
     modifier requireActive {
-        require(active, 'Error: study is not active');
+        require(active, "Error: study is not active");
         _;
     }
 
     modifier requireConcluded {
         require(
-            !active /*&& (endDate <= block.timestamp)*/,
-            'Error: study has not yet been concluded'
+            !active, /*&& (endDate <= block.timestamp)*/
+            "Error: study has not yet been concluded"
         );
         _;
     }
@@ -112,6 +112,31 @@ contract DoubleBlindStudy {
 
     // business logic
 
+    function getReportCount() public view returns (uint256) {
+        return reportCount;
+    }
+
+    function getReport(uint256 index)
+        public
+        view
+        returns (
+            uint256,
+            ReportType,
+            bytes32,
+            string memory,
+            uint256
+        )
+    {
+        Report memory report = reports[index];
+        return (
+            report._id,
+            report._reportType,
+            report._patientId,
+            report._data,
+            report._reportedOn
+        );
+    }
+
     function isOwner() public view returns (bool) {
         return msg.sender == owner;
     }
@@ -174,7 +199,7 @@ contract DoubleBlindStudy {
             patientId,
             _mappingId,
             _data,
-            ts, 
+            ts,
             false
         );
         return patientId;
@@ -266,10 +291,16 @@ contract DoubleBlindStudy {
     */
     function claimReward() public requireConcluded {
         bytes32 patientId = _getHash(msg.sender);
-        
-        require(patients[patientId]._patientId != 0, 'Error: patient has not been part of the study');
-        require(!patients[patientId]._hasBeenRewarded, 'Error: patient has already been rewarded');
-        
+
+        require(
+            patients[patientId]._patientId != 0,
+            "Error: patient has not been part of the study"
+        );
+        require(
+            !patients[patientId]._hasBeenRewarded,
+            "Error: patient has already been rewarded"
+        );
+
         uint256 score = 100;
         for (uint256 i = 0; i < reportCount; i++) {
             if (patientId == reports[i]._patientId) {
