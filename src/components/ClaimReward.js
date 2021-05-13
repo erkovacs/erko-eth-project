@@ -11,7 +11,7 @@ const ClaimReward = props => {
   const handleClaimReward = async () => {
     try {
       const r = await web3jsState.study.methods.claimReward().send();
-      console.log(r);
+      // TODO:: implement post-reward action
       addToast('Success', 'Reward successfully received!');
     } catch (e) {
       addToast('Error', e.message);

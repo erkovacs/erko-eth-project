@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState, useMemo } from 'react';
 import { Badge, Button, Card, Table, Modal } from 'react-bootstrap';
 import { Chart } from 'react-charts';
 import { Web3Context } from './Web3Context';
@@ -12,29 +12,30 @@ const Admin = props => {
   const [reports, setReports] = useState([]);
   const [action, setAction] = useState('nop');
 
-  // TODO:: make these show actual report data
-  const data = React.useMemo(
-    () => [
-      {
-        label: 'Series 1',
-        data: [[0, 1], [1, 2], [2, 4], [3, 2], [4, 7]]
-      },
-      {
-        label: 'Series 2',
-        data: [[0, 3], [1, 1], [2, 5], [3, 6], [4, 4]]
-      }
-    ],
-    []
-  )
-  // TODO:: make these show actual report data
-  const axes = React.useMemo(
-    () => [
-      { primary: true, type: 'linear', position: 'bottom' },
-      { type: 'linear', position: 'left' }
-    ],
-    []
-  )
-  
+  const reportData = useMemo(() => {
+    // {"label":"Series 1","datums":[{"x":"Test 1","y":69},{"x":"Test 2","y":14}]}
+    const administrationReports = reports.filter(report => report.data.reportType === "TREATMENT_ADMINISTRATION_REPORT");
+
+    const statusReports = reports.filter(report => report.data.reportType === "STATUS_REPORT");
+
+    const data = [{
+      label: 'Reports', datums: [{
+        x: 'Administration reports',
+        y: administrationReports.length
+      }, {
+        x: 'Status reports',
+        y: statusReports.length
+      }]
+    }];
+
+    return data;
+  }, [reports.length]);
+
+  const axes = useMemo(() => [
+    { primary: true, type: 'ordinal', position: 'bottom' },
+    { position: 'left', type: 'linear', stacked: true }
+  ], []);
+
   useEffect(() => {
     (async () => {
       const count = await web3jsState.study.methods.getReportCount().call();
@@ -117,10 +118,11 @@ const Admin = props => {
           <div
             style={{
               width: '600px',
-              height: '300px'
+              height: '300px',
+              margin: '0 auto'
             }}
           >
-            <Chart data={data} axes={axes} />
+            <Chart data={reportData} series={{ type: 'bar' }} axes={axes} tooltip />
           </div>
           <h4>
             Study status <Badge variant={web3jsState.isStudyActive ? 'success' : 'warning'}>{web3jsState.isStudyActive ? 'Active' : 'Inactive'}</Badge>
