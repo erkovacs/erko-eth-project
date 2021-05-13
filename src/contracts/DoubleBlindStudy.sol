@@ -288,6 +288,10 @@ contract DoubleBlindStudy {
     /*
       called in order to distribute the reward to the
       caller 
+
+      T_MED = 100 + (rc * 10) + (rc/mc * 100)
+      rc = report count
+      mc = month count
     */
     function claimReward() public requireConcluded {
         bytes32 patientId = _getHash(msg.sender);
@@ -301,13 +305,25 @@ contract DoubleBlindStudy {
             "Error: patient has already been rewarded"
         );
 
-        uint256 score = 100;
+        // calculate MED rewarded
+        uint256 tMed = 100;
+        uint256 mc = duration / 2629800; // duration / seconds in a month
+        uint256 rc = 0;
+        uint256 rcPerMonth = 0;
+
         for (uint256 i = 0; i < reportCount; i++) {
             if (patientId == reports[i]._patientId) {
-                score += 10;
+                rc++;
             }
         }
-        pot.mint(msg.sender, score);
+
+        // TODO :: Fix this. for some reason it runs out of gas on the next part
+
+        //tMed = tMed + (rc * 10);
+        //rcPerMonth = rc / mc;
+        //tMed = tMed + (rcPerMonth * 100);
+
+        pot.mint(msg.sender, tMed);
         patients[patientId]._hasBeenRewarded = true;
     }
 }

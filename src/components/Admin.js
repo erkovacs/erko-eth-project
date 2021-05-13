@@ -3,6 +3,7 @@ import { Badge, Button, Card, Table, Modal } from 'react-bootstrap';
 import { Chart } from 'react-charts';
 import { Web3Context } from './Web3Context';
 import { ToastContext } from './ToastContext';
+import { REPORT_TYPES } from '../constants';
 
 const Admin = props => {
 
@@ -13,10 +14,14 @@ const Admin = props => {
   const [action, setAction] = useState('nop');
 
   const reportData = useMemo(() => {
+    //
     // {"label":"Series 1","datums":[{"x":"Test 1","y":69},{"x":"Test 2","y":14}]}
-    const administrationReports = reports.filter(report => report.data.reportType === "TREATMENT_ADMINISTRATION_REPORT");
+    //
+    const administrationReports = reports.filter(report => 
+      report.data.reportType === REPORT_TYPES.TREATMENT_ADMINISTRATION_REPORT.value);
 
-    const statusReports = reports.filter(report => report.data.reportType === "STATUS_REPORT");
+    const statusReports = reports.filter(report => 
+      report.data.reportType === REPORT_TYPES.STATUS_REPORT.value);
 
     const data = [{
       label: 'Reports', datums: [{
