@@ -1,4 +1,4 @@
-import { Tabs, Tab, Navbar, Button } from 'react-bootstrap'
+import { Alert, Tabs, Tab, Navbar, Button } from 'react-bootstrap'
 import React, { useContext, useEffect, useState } from 'react';
 import EnrollForm from './EnrollForm';
 import Profile from './Profile';
@@ -6,6 +6,7 @@ import OrderForm from './OrderForm';
 import OrderList from './OrderList';
 import ReportForm from './ReportForm';
 import ClaimReward from './ClaimReward';
+import Admin from './Admin';
 import { Web3Context } from './Web3Context';
 import { ToastContext } from './ToastContext';
 import { TITLE } from '../constants';
@@ -28,8 +29,14 @@ const DoubleBlindStudySupportApp = props => {
   }, [web3jsState, web3jsState.hasMetamask, web3jsState.isMetamaskConnected]);
 
   useEffect(() => {
-    setNavTab(state.isPatientEnrolled ? 'Profile' : 'Enroll');
-  }, [state.isPatientEnrolled]);
+    if (state.isOwner) {
+      setNavTab('Admin');
+    } else if (state.isStudyConcluded) {
+      setNavTab('Claim_reward');
+    } else {
+      setNavTab(state.isPatientEnrolled ? 'Profile' : 'Enroll');
+    }
+  }, [state.isOwner, state.isPatientEnrolled]);
 
   return (
       <React.Fragment>
@@ -58,35 +65,46 @@ const DoubleBlindStudySupportApp = props => {
           <br></br>
           <div className="row">
             <main role="main" className="col-lg-12 d-flex text-center">
-              <div className="content mr-auto ml-auto col-lg-8">
+              <div className="content mr-auto ml-auto col-lg-8 col-md-10">
+              { state.hasMetamask && state.isMetamaskConnected && 
+              !state.isStudyActive && !state.isOwner ? 
+                <Alert variant="warning">
+                  Study is not yet active. Please check back soon!
+                </Alert> : null }
+
               { state.hasMetamask ? 
                   state.isMetamaskConnected ?
-                  <Tabs activeKey={navTab} onSelect={key => setNavTab(key)} id="nav-tabs">
-                      <Tab eventKey="Enroll" title="Enroll" disabled={state.isPatientEnrolled}>
-                        <EnrollForm />
-                      </Tab>
-                      <Tab eventKey="Profile" title="Profile" disabled={!state.isPatientEnrolled}>
-                        <Profile />
-                      </Tab>
-                      <Tab eventKey="Order" title="Order" disabled={!state.isPatientEnrolled}>
-                        <OrderForm />
-                      </Tab>
-                      <Tab eventKey="My_orders" title="My Orders" disabled={!state.isPatientEnrolled}>
-                        <OrderList setNavTab={setNavTab} setReportType={setReportType} />
-                      </Tab>
-                      <Tab eventKey="Report" title="Report" disabled={!state.isPatientEnrolled}>
-                        <ReportForm reportType={reportType} setReportType={setReportType}/>
-                      </Tab>
-                      <Tab eventKey="Claim_reward" title="Claim reward" disabled={!state.isStudyConcluded}>
-                        <ClaimReward />
-                      </Tab>
-                    </Tabs> : 
-                    <p>Welcome to {TITLE}! This is a Blockchain-enabled website.<br></br><br></br>
-                      <Button variant="primary" type="submit" onClick={() => connectMetamask()}>
-                        Connect with MetaMask
-                      </Button>
-                    </p>  :
-                  <p>Welcome to {TITLE}! This is a Blockchain-enabled website. Please connect with <a href="https://metamask.io/">MetaMask</a></p> 
+                    state.isOwner ?
+                      <Admin />
+                      : 
+                      <Tabs activeKey={navTab} onSelect={key => setNavTab(key)} id="nav-tabs">
+                        <Tab eventKey="Enroll" title="Enroll" disabled={state.isPatientEnrolled || state.isOwner}>
+                          <EnrollForm />
+                        </Tab>
+                        <Tab eventKey="Profile" title="Profile" disabled={!state.isPatientEnrolled || state.isStudyConcluded}>
+                          <Profile />
+                        </Tab>
+                        <Tab eventKey="Order" title="Order" disabled={!state.isPatientEnrolled || state.isStudyConcluded}>
+                          <OrderForm />
+                        </Tab>
+                        <Tab eventKey="My_orders" title="My Orders" disabled={!state.isPatientEnrolled || state.isStudyConcluded}>
+                          <OrderList setNavTab={setNavTab} setReportType={setReportType} />
+                        </Tab>
+                        <Tab eventKey="Report" title="Report" disabled={!state.isPatientEnrolled || state.isStudyConcluded}>
+                          <ReportForm reportType={reportType} setReportType={setReportType}/>
+                        </Tab>
+                        <Tab eventKey="Claim_reward" title="Claim reward" disabled={!state.isStudyConcluded}>
+                          <ClaimReward />
+                        </Tab>
+                      </Tabs> :
+
+                      <p>Welcome to {TITLE}! This is a Blockchain-enabled website.<br></br><br></br>
+                        <Button variant="primary" type="submit" onClick={() => connectMetamask()}>
+                          Connect with MetaMask
+                        </Button>
+                      </p>  :
+
+                      <p>Welcome to {TITLE}! This is a Blockchain-enabled website. Please connect with <a href="https://metamask.io/">MetaMask</a></p> 
               }
               </div>
             </main>

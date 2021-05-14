@@ -1,7 +1,15 @@
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.7.4;
 
+import "@openzeppelin/contracts/math/SafeMath.sol";
+import "./MEDToken.sol";
+
 contract DoubleBlindStudy {
-    address payable private pot;
+
+    using SafeMath for uint256;
+
+    address private owner;
+    MEDToken private pot;
     uint256 private startDate;
     uint256 private endDate;
     uint256 private duration;
@@ -18,8 +26,28 @@ contract DoubleBlindStudy {
 
     bool public active;
 
+    event StudyActivated(uint256 ts);
+    event StudyConcluded(uint256 ts, string reason);
+    event PatientRewarded(uint256 amount);
+
+    modifier requireOwner {
+        require(
+            msg.sender == owner,
+            "Error: only the owner can conclude the study"
+        );
+        _;
+    }
+
     modifier requireActive {
-        require(active);
+        require(active, "Error: study is not active");
+        _;
+    }
+
+    modifier requireConcluded {
+        require(
+            !active, /*&& (endDate <= block.timestamp)*/
+            "Error: study has not yet been concluded"
+        );
         _;
     }
 
@@ -31,6 +59,7 @@ contract DoubleBlindStudy {
         bytes32 _mappingId;
         string _data;
         uint256 _enrolledOn;
+        bool _hasBeenRewarded;
     }
 
     struct Order {
@@ -49,11 +78,10 @@ contract DoubleBlindStudy {
     }
 
     /*
-      the deployer of the contract is the study monitor
+      the deployer of the contract is the study owner
       
-      they should provide address of a wallet with sufficient 
-      funds to finance expenses related to the study, called 
-      the pot
+      rewards will be distributed out of the pot, which 
+      is an ERC20 compliant token
       
       for miscellaneous transactions the patients are
       expected to pay by themselves but this is mitigated
@@ -63,10 +91,12 @@ contract DoubleBlindStudy {
       startDate and duration are specified in seconds
     */
     constructor(
-        address payable _pot,
+        address _owner,
+        MEDToken _pot,
         uint256 _startDate,
         uint256 _duration
     ) {
+        owner = _owner;
         pot = _pot;
         duration = _duration;
         startDate = _startDate;
@@ -76,24 +106,10 @@ contract DoubleBlindStudy {
         reportCount = 0;
         orderCount = 0;
 
-        // TODO:: deal with the logic here
-        active = true;
+        active = (startDate <= block.timestamp);
     }
 
     // helpers
-
-    /*
-      The first transaction at or after
-      the end date will deactivate the contract and
-      conclude the study. Ran at the end of all public
-      calls to the contract
-    */
-    function _checkIfEnded() private {
-        if (block.timestamp > endDate) {
-            active = false;
-            _concludeStudy();
-        }
-    }
 
     function _getHash(address payable _address) private view returns (bytes32) {
         return keccak256(abi.encodePacked(_address));
@@ -101,13 +117,46 @@ contract DoubleBlindStudy {
 
     // business logic
 
+    function getReportCount() public view returns (uint256) {
+        return reportCount;
+    }
+
+    function getReport(uint256 index)
+        public
+        view
+        returns (
+            uint256,
+            ReportType,
+            bytes32,
+            string memory,
+            uint256
+        )
+    {
+        Report memory report = reports[index];
+        return (
+            report._id,
+            report._reportType,
+            report._patientId,
+            report._data,
+            report._reportedOn
+        );
+    }
+
+    function isOwner() public view returns (bool) {
+        return msg.sender == owner;
+    }
+
+    function activate() public requireOwner {
+        active = true;
+        emit StudyActivated(block.timestamp);
+    }
+
     /*
       Returns whether the specified patient is enrolled
     */
     function isPatientEnrolled(address payable _address)
         public
         view
-        requireActive
         returns (bytes32)
     {
         bytes32 patientId = _getHash(_address);
@@ -120,7 +169,6 @@ contract DoubleBlindStudy {
     function getPatientData(address payable _address)
         public
         view
-        requireActive
         returns (
             uint256,
             bytes32,
@@ -156,19 +204,11 @@ contract DoubleBlindStudy {
             patientId,
             _mappingId,
             _data,
-            ts
+            ts,
+            false
         );
         return patientId;
     }
-
-    /*
-      obscure the data in such a way that no one can see which
-      patient pertains to which group
-     
-      TODO:: find a solution for this. How can we blind the
-      patient?
-    */
-    function _blind() private {}
 
     /*
       order a treatment kit -- real or placebo --
@@ -236,12 +276,62 @@ contract DoubleBlindStudy {
     }
 
     /*
-     fired at the end of the study (on or after endDate)
+      fired at the end of the study (on or after endDate)
     */
-    function _concludeStudy() private {}
+    function conclude(string memory reason) public requireOwner requireActive {
+        active = false;
+        emit StudyConcluded(block.timestamp, reason);
+    }
 
     /*
-      reverse the blinding procedure
+      returns whether the study has concluded
     */
-    function _unblind() private {}
+    function isConcluded() public view returns (bool) {
+        return !active; //&& (endDate <= block.timestamp);
+    }
+
+    /*
+      called in order to distribute the reward to the
+      caller 
+
+      T_MED = 100 + (rc * 10) + (rc/mc * 100)
+      T_MED = total MED rewarded
+      rc = report count
+      mc = month count
+    */
+    function claimReward() public requireConcluded {
+        bytes32 patientId = _getHash(msg.sender);
+
+        require(
+            patients[patientId]._patientId != 0,
+            "Error: patient has not been part of the study"
+        );
+        require(
+            !patients[patientId]._hasBeenRewarded,
+            "Error: patient has already been rewarded"
+        );
+
+        // calculate MED rewarded
+        uint256 tMed = 100;
+        uint256 mc = duration.div(2629800); // duration / seconds in a month
+        uint256 rc = 0;
+        uint256 rcPerMonth = 0;
+
+        if (mc == 0) mc = 1; // handle div by 0
+
+        for (uint256 i = 0; i < reportCount; i++) {
+            if (patientId == reports[i]._patientId) {
+                rc++;
+            }
+        }
+
+        tMed = tMed.add(rc.mul(10));
+        rcPerMonth = rc.div(mc);
+        tMed = tMed.add(rcPerMonth.mul(100));
+
+        pot.mint(msg.sender, tMed);
+        patients[patientId]._hasBeenRewarded = true;
+        
+        emit PatientRewarded(tMed);
+    }
 }

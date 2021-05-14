@@ -12,8 +12,11 @@ export const Web3Provider = props => {
     isMetamaskConnected: false,
     web3: null,
     account: null,
+    isStudyActive: null,
+    studyBeginDate: null,
     study: null,
     address: null,
+    isOwner: false,
     isPatientEnrolled: false,
     isStudyConcluded: false
   });
@@ -52,19 +55,35 @@ export const Web3Provider = props => {
         const study = new web3.eth.Contract(abi, address, {
           from: account
         });
+        
+        let patientId, isPatientEnrolled;
+        const isStudyActive = await study.methods.active().call();
 
+        
         // Check if we are enrolled
-        const patientId = await study.methods.isPatientEnrolled(account).call();
-        const isPatientEnrolled =  Bytes32_NULL !== patientId;
+        patientId = await study.methods.isPatientEnrolled(account).call();
+        isPatientEnrolled =  Bytes32_NULL !== patientId;
+        
+        const isOwner = await study.methods.isOwner().call();
+        const isConcluded = await study.methods.isConcluded().call();
+
+        // TODO:: remove after debugging console.log(isConcluded);
+
+        // Subscribe to events
+        await study.once('StudyActivated', {}, (error, event) => setState({...state, isStudyActive: true}))
+        await study.once('StudyConcluded', {}, (error, event) => setState({...state, isStudyActive: false}))
 
         setState({
           hasMetamask: true,
           web3 : web3,
           address: address,
           study: study,
+          isStudyActive: isStudyActive,
           account: account,
           isMetamaskConnected: isMetamaskConnected,
           isPatientEnrolled: isPatientEnrolled,
+          isOwner: isOwner,
+          isStudyConcluded: isConcluded,
           patientId: patientId
         });
       } catch (e) {
