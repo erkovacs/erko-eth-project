@@ -1,9 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.7.4;
 
+import "@openzeppelin/contracts/math/SafeMath.sol";
 import "./MEDToken.sol";
 
 contract DoubleBlindStudy {
+
+    using SafeMath for uint256;
+
     address private owner;
     MEDToken private pot;
     uint256 private startDate;
@@ -24,6 +28,7 @@ contract DoubleBlindStudy {
 
     event StudyActivated(uint256 ts);
     event StudyConcluded(uint256 ts, string reason);
+    event PatientRewarded(uint256 amount);
 
     modifier requireOwner {
         require(
@@ -290,6 +295,7 @@ contract DoubleBlindStudy {
       caller 
 
       T_MED = 100 + (rc * 10) + (rc/mc * 100)
+      T_MED = total MED rewarded
       rc = report count
       mc = month count
     */
@@ -307,9 +313,11 @@ contract DoubleBlindStudy {
 
         // calculate MED rewarded
         uint256 tMed = 100;
-        uint256 mc = duration / 2629800; // duration / seconds in a month
+        uint256 mc = duration.div(2629800); // duration / seconds in a month
         uint256 rc = 0;
         uint256 rcPerMonth = 0;
+
+        if (mc == 0) mc = 1; // handle div by 0
 
         for (uint256 i = 0; i < reportCount; i++) {
             if (patientId == reports[i]._patientId) {
@@ -317,13 +325,13 @@ contract DoubleBlindStudy {
             }
         }
 
-        // TODO :: Fix this. for some reason it runs out of gas on the next part
-
-        //tMed = tMed + (rc * 10);
-        //rcPerMonth = rc / mc;
-        //tMed = tMed + (rcPerMonth * 100);
+        tMed = tMed.add(rc.mul(10));
+        rcPerMonth = rc.div(mc);
+        tMed = tMed.add(rcPerMonth.mul(100));
 
         pot.mint(msg.sender, tMed);
         patients[patientId]._hasBeenRewarded = true;
+        
+        emit PatientRewarded(tMed);
     }
 }
