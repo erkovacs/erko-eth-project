@@ -60,3 +60,7 @@ Submitting the report will create a Treatment Administration Report containing t
 A different kind of report is the Status Report. It includes more general information on the patient, including basic biological parameters, general well-being and a short, written report.
 
 ![image](https://user-images.githubusercontent.com/32717298/118352199-bbfbce00-b568-11eb-9508-a6f3ded4a464.png)
+
+The owner of the contract has administrative access to the application and cannot be a participant himself, at least not with the same account. They can view a dashboard containing general data about the status of the study, and can activate/deactivate it, as well as take the emergency measures of stopping for safety/stopping for efficiency.
+
+![image](https://user-images.githubusercontent.com/32717298/118352350-ac30b980-b569-11eb-8905-baa89abe61e6.png)
