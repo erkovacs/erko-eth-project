@@ -37,3 +37,26 @@ At the end of the study, all active participants receive a monetary reward in Et
  - Access http://localhost:3000 from the browser with MetaMask Setup. If everything is set up correctly MetaMask should prompt you to connect to the site. Do so with the imported account!
 
 ## Usage
+After accessing the application and connecting MetaMask, the patient is prompted to enrol. They must provide a series of basic biological parameters but are not otherwise identifiable by the data they give out. An informed consent form is also filled in and submitted at the same time.
+
+![image](https://user-images.githubusercontent.com/32717298/118352160-966ec480-b568-11eb-808d-9762b21de15f.png)
+
+The patient’s parameters are displayed in the Profile tab.
+ 
+ ![image](https://user-images.githubusercontent.com/32717298/118352170-a1c1f000-b568-11eb-871f-a240a0b913e5.png)
+ 
+Afterwards, the patient can launch an order for a Treatment Kit. They must provide an address for the delivery of the Treatment Kit which will be relayed to the third-party providing the Treatment Kits, but cannot be linked to the patient as the third party will only receive the Mapping ID, which is insufficient information to identify the patient with the address.
+
+![image](https://user-images.githubusercontent.com/32717298/118352178-a8506780-b568-11eb-95bb-1c26ac0d7964.png)
+
+Orders are displayed under the “My Orders” tab. When the order is in status “confirmed” in the third-party’s system, the patient can report the administration of the Treatment Kit.
+
+![image](https://user-images.githubusercontent.com/32717298/118352184-aededf00-b568-11eb-9639-1ab0d01a0789.png)
+
+Submitting the report will create a Treatment Administration Report containing the Treatment Kit ID, the dosage, and a timestamp (independent from the block timestamp).
+
+![image](https://user-images.githubusercontent.com/32717298/118352191-b56d5680-b568-11eb-9865-725f83bb1436.png)
+
+A different kind of report is the Status Report. It includes more general information on the patient, including basic biological parameters, general well-being and a short, written report.
+
+![image](https://user-images.githubusercontent.com/32717298/118352199-bbfbce00-b568-11eb-9508-a6f3ded4a464.png)
