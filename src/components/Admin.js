@@ -11,9 +11,29 @@ const Admin = props => {
   const [toasts, addToast] = useContext(ToastContext);
   const [show, setShow] = useState(false);
   const [reports, setReports] = useState([]);
+  const [reportsUpdated, setReportsUpdated] = useState(false);
   const [action, setAction] = useState('nop');
 
+  useEffect(() => {
+    (async () => {
+      const count = await web3jsState.study.methods.getReportCount().call();
+      for (let i = 1; i <= count; i++) {
+        const reportRaw = await web3jsState.study.methods.getReport(i).call();
+        const report = {
+          id: reportRaw[0],
+          data: JSON.parse(reportRaw[3]),
+          ts: parseInt(reportRaw[4])
+        };
+        const reportsCopy = reports;
+        reportsCopy.push(report);
+        setReports(reportsCopy);
+      }
+      setReportsUpdated(true);
+    })();
+  }, []);
+
   const reportData = useMemo(() => {
+    
     //
     // {"label":"Series 1","datums":[{"x":"Test 1","y":69},{"x":"Test 2","y":14}]}
     //
@@ -34,29 +54,12 @@ const Admin = props => {
     }];
 
     return data;
-  }, [reports.length]);
+  }, [reportsUpdated]);
 
   const axes = useMemo(() => [
     { primary: true, type: 'ordinal', position: 'bottom' },
     { position: 'left', type: 'linear', stacked: true }
   ], []);
-
-  useEffect(() => {
-    (async () => {
-      const count = await web3jsState.study.methods.getReportCount().call();
-      for (let i = 1; i <= count; i++) {
-        const reportRaw = await web3jsState.study.methods.getReport(i).call();
-        const report = {
-          id: reportRaw[0],
-          data: JSON.parse(reportRaw[3]),
-          ts: parseInt(reportRaw[4])
-        };
-        const reportsCopy = reports;
-        reportsCopy.push(report);
-        setReports(reportsCopy);
-      }
-    })();
-  }, []);
 
   const handleClose = _action => {
     setShow(false);
