@@ -9,15 +9,15 @@ import DoubleBlindStudySupportApp from './DoubleBlindStudySupportApp';
 const App = props => {
   return (
 
-      <Web3Provider>
       <ToastProvider>
+      <Web3Provider>
       <ProfileProvider>
       <OrderProvider>
         <DoubleBlindStudySupportApp />
       </OrderProvider>
       </ProfileProvider>
-      </ToastProvider>
       </Web3Provider>
+      </ToastProvider>
     );
   }
 

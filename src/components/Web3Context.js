@@ -1,12 +1,14 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import DoubleBlindStudy from '../abis/DoubleBlindStudy.json';
+import { ToastContext } from './ToastContext';
 import { Bytes32_NULL } from '../constants';
 import Web3 from 'web3';
-import './App.css';
 
 export const Web3Context = createContext();
 
 export const Web3Provider = props => {
+
+  const [toasts, addToast] = useContext(ToastContext);
   const [state, setState] = useState({
     hasMetamask: false,
     isMetamaskConnected: false,
@@ -22,8 +24,10 @@ export const Web3Provider = props => {
   });
 
   useEffect(() => {
-    (async () => loadBlockchainData())();
-  }, [state.hasMetamask, state.isMetamaskConnected]);
+    if (!state.isMetamaskConnected) {
+      (async () => loadBlockchainData())();
+    }
+  }, [state.isMetamaskConnected]);
 
   const loadBlockchainData = async () => {
 
@@ -67,11 +71,9 @@ export const Web3Provider = props => {
         const isOwner = await study.methods.isOwner().call();
         const isConcluded = await study.methods.isConcluded().call();
 
-        // TODO:: remove after debugging console.log(isConcluded);
-
         // Subscribe to events
-        await study.once('StudyActivated', {}, (error, event) => setState({...state, isStudyActive: true}))
-        await study.once('StudyConcluded', {}, (error, event) => setState({...state, isStudyActive: false}))
+        study.once('StudyActivated', {}, (error, event) => setState({...state, isStudyActive: true}))
+        study.once('StudyConcluded', {}, (error, event) => setState({...state, isStudyActive: false}))
 
         setState({
           hasMetamask: true,

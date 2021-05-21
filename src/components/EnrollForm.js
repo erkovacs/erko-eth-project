@@ -1,4 +1,4 @@
-import { Alert, Button, Card, Form } from 'react-bootstrap'
+import { Button, Card, Form } from 'react-bootstrap'
 import React, { useState, useContext } from 'react';
 import { Bytes32_NULL, GENDERS, BLINDING_API } from '../constants';
 import { Web3Context } from './Web3Context';

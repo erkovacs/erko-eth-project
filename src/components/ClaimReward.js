@@ -1,21 +1,62 @@
-import React, { Component, useState, useContext } from 'react';
-import { Badge, Button, Card, Table, Modal } from 'react-bootstrap';
+import React, { useState, useContext, useEffect } from 'react';
+import { Button, Card, Modal } from 'react-bootstrap';
 import { Web3Context } from './Web3Context';
 import { ToastContext } from './ToastContext';
+import { parseBool } from '../utils';
+import MEDToken from '../abis/MEDToken.json';
+
 
 const ClaimReward = props => {
   const { web3jsState } = useContext(Web3Context);
   const [toasts, addToast] = useContext(ToastContext);
   const [show, setShow] = useState(false);
 
-  const handleClaimReward = async () => {
+  useEffect(() => {
+    const hasToken = parseBool(window.localStorage.getItem('hasToken'));
+    if (!hasToken) loadMEDToken();
+  }, [])
+
+  const loadMEDToken = async () => {
+    window.localStorage.setItem('hasToken', false);
+
+    const networkId = await web3jsState.web3.eth.net.getId();
+    const { networks } = MEDToken;
+    const address = networks[networkId] ? networks[networkId].address : null;
+    const tokenSymbol = 'MED';
+    const tokenDecimals = 0;
+    const tokenImage = null;
+
+    let wasAdded = false;
     try {
-      const r = await web3jsState.study.methods.claimReward().send();
-      // TODO:: implement post-reward action
-      addToast('Success', 'Reward successfully received!');
+      // wasAdded is a boolean. Like any RPC method, an error may be thrown.
+      wasAdded = await window.ethereum.request({
+        method: 'wallet_watchAsset',
+        params: {
+          type: 'ERC20', // Initially only supports ERC20, but eventually more!
+          options: {
+            address: address, // The address that the token is at.
+            symbol: tokenSymbol, // A ticker symbol or shorthand, up to 5 chars.
+            decimals: tokenDecimals, // The number of decimals in the token
+            image: tokenImage, // A string url of the token logo
+          },
+        },
+      });
     } catch (e) {
+      console.log(e.message);
       addToast('Error', e.message);
     }
+    window.localStorage.setItem('hasToken', wasAdded);
+  }
+
+  const handleClaimReward = async () => {
+    try {
+      await web3jsState.study.methods.claimReward().send();
+      addToast('Success', 'Reward successfully received!');
+    } catch (e) {
+      console.error(e.message);
+      addToast('Error', e.message);
+    }
+    setShow(false);
   }
 
   return (

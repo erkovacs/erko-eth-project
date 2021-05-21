@@ -28,7 +28,7 @@ contract DoubleBlindStudy {
 
     event StudyActivated(uint256 ts);
     event StudyConcluded(uint256 ts, string reason);
-    event PatientRewarded(uint256 amount);
+    event PatientRewarded(bytes32 patientId, uint256 amount);
 
     modifier requireOwner {
         require(
@@ -294,8 +294,8 @@ contract DoubleBlindStudy {
       called in order to distribute the reward to the
       caller 
 
-      T_MED = 100 + (rc * 10) + (rc/mc * 100)
-      T_MED = total MED rewarded
+      t_med = 100 + (rc * 10) + (rc/mc * 100)
+      t_med = total MED rewarded
       rc = report count
       mc = month count
     */
@@ -332,6 +332,6 @@ contract DoubleBlindStudy {
         pot.mint(msg.sender, tMed);
         patients[patientId]._hasBeenRewarded = true;
         
-        emit PatientRewarded(tMed);
+        emit PatientRewarded(patientId, tMed);
     }
 }
