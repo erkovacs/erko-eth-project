@@ -20,7 +20,8 @@ export const Web3Provider = props => {
     address: null,
     isOwner: false,
     isPatientEnrolled: false,
-    isStudyConcluded: false
+    isStudyConcluded: false,
+    isPatientRewarded: false
   });
 
   useEffect(() => {
@@ -36,7 +37,7 @@ export const Web3Provider = props => {
 
       let account = null;
       let isMetamaskConnected = false;
-      
+
       // Try to connect first, if not already connected
       try {
         if (!state.isMetamaskConnected) {
@@ -59,25 +60,29 @@ export const Web3Provider = props => {
         const study = new web3.eth.Contract(abi, address, {
           from: account
         });
-        
+
         let patientId, isPatientEnrolled;
         const isStudyActive = await study.methods.active().call();
 
-        
+
         // Check if we are enrolled
         patientId = await study.methods.isPatientEnrolled(account).call();
-        isPatientEnrolled =  Bytes32_NULL !== patientId;
-        
+        isPatientEnrolled = Bytes32_NULL !== patientId;
+
         const isOwner = await study.methods.isOwner().call();
         const isConcluded = await study.methods.isConcluded().call();
 
         // Subscribe to events
-        study.once('StudyActivated', {}, (error, event) => setState({...state, isStudyActive: true}))
-        study.once('StudyConcluded', {}, (error, event) => setState({...state, isStudyActive: false}))
+        study.once('StudyActivated', {}, (error, event) => setState({ ...state, isStudyActive: true }));
+        study.once('StudyConcluded', {}, (error, event) => setState({ ...state, isStudyActive: false }));
+        study.once('PatientRewarded', { filter: { patientId: patientId } },
+          (error, event) => {
+            setState({ ...state, isPatientRewarded: true })
+          });
 
         setState({
           hasMetamask: true,
-          web3 : web3,
+          web3: web3,
           address: address,
           study: study,
           isStudyActive: isStudyActive,
@@ -86,7 +91,8 @@ export const Web3Provider = props => {
           isPatientEnrolled: isPatientEnrolled,
           isOwner: isOwner,
           isStudyConcluded: isConcluded,
-          patientId: patientId
+          patientId: patientId,
+          isPatientRewarded: state.isPatientRewarded
         });
       } catch (e) {
         setState({
@@ -98,7 +104,7 @@ export const Web3Provider = props => {
       }
     } else {
       setState({
-        ...state, 
+        ...state,
         hasMetamask: false
       });
       console.error('MetaMask is not installed.');
@@ -113,9 +119,9 @@ export const Web3Provider = props => {
     setState(_state);
   }
 
-  return (<Web3Context.Provider value={{ 
-      web3jsState: state, 
-      setWeb3jsState: setWeb3jsState,
-      connectMetamask: connectMetamask, 
-    }}>{props.children}</Web3Context.Provider>);
+  return (<Web3Context.Provider value={{
+    web3jsState: state,
+    setWeb3jsState: setWeb3jsState,
+    connectMetamask: connectMetamask,
+  }}>{props.children}</Web3Context.Provider>);
 }

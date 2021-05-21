@@ -70,7 +70,10 @@ const ClaimReward = props => {
           </Card.Text>
         </Card.Body>
         <Card.Body>
-          <Button variant="success" onClick={() => setShow(true)}>Claim reward!</Button>
+          {/* 
+            TODO:: Persist web3jsState.isPatientRewarded state in localStorage or pull from contract by adding a function for that 
+          */}
+          <Button variant="success" onClick={() => setShow(true)} disabled={web3jsState.isPatientRewarded}>Claim reward!</Button>
         </Card.Body>
       </Card>
       <Modal show={show} onHide={() => setShow(false)}>
