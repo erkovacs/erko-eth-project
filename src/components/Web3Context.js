@@ -91,9 +91,6 @@ export const Web3Provider = props => {
         } else {
           hasToken = parseBool(localStorage.getItem(`hasToken.${account}`));
         }
-        if (null === localStorage.getItem(`hasBeenRewarded.${account}`)) {
-          localStorage.setItem(`hasBeenRewarded.${account}`, hasBeenRewarded);
-        }
 
         // Subscribe to events
         study.once('StudyActivated', {}, (error, event) => setState({ ...state, isStudyActive: true }));
@@ -101,7 +98,6 @@ export const Web3Provider = props => {
         study.once('PatientRewarded', { filter: { patientId: patientId } },
           (error, event) => {
             setState({ ...state, hasBeenRewarded: true });
-            localStorage.setItem(`hasBeenRewarded.${account}`, true);
           });
 
         setState({
