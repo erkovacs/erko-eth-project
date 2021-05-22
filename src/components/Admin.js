@@ -59,7 +59,7 @@ const Admin = props => {
   const axes = useMemo(() => [
     { primary: true, type: 'ordinal', position: 'bottom' },
     { position: 'left', type: 'linear', stacked: true }
-  ], []);
+  ]);
 
   const handleClose = _action => {
     setShow(false);
