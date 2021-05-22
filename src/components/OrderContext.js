@@ -9,6 +9,7 @@ export const OrderContext = createContext();
 export const OrderStates = { 
   Unconfirmed: 'UNCONFIRMED',
   Confirmed: 'CONFIRMED',
+  Closed: 'CLOSED'
 }
 
 export const OrderFactory = rpcResult => {
@@ -20,6 +21,7 @@ export const OrderFactory = rpcResult => {
   ) {
     order = {};
     order.id = rpcResult[0];
+    order._patientId = rpcResult[1];
     order.patientId = redactString(rpcResult[1], 30, 40);
     order.voucher = redactString(rpcResult[2], 5);
     order.state = OrderStates.Unconfirmed;
@@ -38,6 +40,23 @@ export const OrderProvider = props => {
     }
     (async () => {
       try {
+        // grab all orders
+        const allOrders = [];
+        const orderCountString = await web3jsState.study.methods.orderCount().call();
+        const orderCount = parseInt(orderCountString);
+        
+        for (let i = 1; i <= orderCount; i++) {
+          const rawOrder = await web3jsState.study.methods.orders(i).call();
+          const order = OrderFactory(rawOrder);
+          order.state = OrderStates.Closed;
+          if (order._patientId === web3jsState.patientId) {
+            allOrders.push(order);
+          }
+        }
+        
+        setOrders(allOrders);
+
+        // mark the current one as active
         const result = await web3jsState.study.methods.getCurrentOrder().call();
         const order = OrderFactory(result);
         if (order) {
@@ -47,7 +66,7 @@ export const OrderProvider = props => {
           if (isOrderConfirmed[0] && isOrderConfirmed[0].success) {
             order.state = OrderStates.Confirmed;
           }
-          const _orders = orders.filter(_order => order.id !== _order.id);
+          const _orders = order.filter(_order => order.id !== _order.id);
           setOrders([..._orders, order]);
         }
       } catch (e) {

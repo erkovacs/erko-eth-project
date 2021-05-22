@@ -38,12 +38,12 @@ const OrderList = props => {
                     <td>{ order.voucher }</td>
                     <td>
                       <Badge variant={ order.state === OrderStates.Confirmed ? 'success' : 'warning' }>
-                        { order.state === OrderStates.Confirmed ? 'confirmed' : 'unconfirmed' }
+                        { order.state === OrderStates.Confirmed ? 'confirmed' : order.state === OrderStates.Closed ? 'closed' : 'unconfirmed' }
                       </Badge>
                     </td>
                     <td>{ formatDate(order.date) }</td>
                     <td>
-                      <Button size='sm' onClick={() => navigateToReport()}>Administer</Button>
+                      { order.state === OrderStates.Confirmed ? <Button size='sm' onClick={() => navigateToReport()}>Administer</Button> : null }
                     </td>
                   </tr>
                 );

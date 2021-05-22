@@ -172,13 +172,15 @@ const OrderForm = props => {
     setSubmitting(false);
   }
 
+  const activeOrders = orders.filter(order => order.state === OrderStates.Confirmed);
+
   return (
     <React.Fragment>
       <br></br>
       <Card>
         <Card.Body>
           <Card.Title>Order Treatment Kit</Card.Title>
-          { orders.length === 0 ? <Form>
+          { activeOrders.length === 0 ? <Form>
             <br></br>
             <React.Fragment>
               {[
@@ -203,7 +205,7 @@ const OrderForm = props => {
                         value={fields[field1].value}
                         placeholder={fields[field1].label}
                         onChange={e => handleChange(field1, e)}
-                        disabled={orders.length > 0 || fields[field1].disabled}
+                        disabled={activeOrders.length > 0 || fields[field1].disabled}
                         readOnly={fields[field1].disabled}/>
                     </Form.Group>
                   </Col> : '' }
@@ -216,7 +218,7 @@ const OrderForm = props => {
                         value={fields[field2].value}
                         placeholder={fields[field2].label}
                         onChange={e => handleChange(field2, e)} 
-                        disabled={orders.length > 0 || fields[field2].disabled}
+                        disabled={activeOrders.length > 0 || fields[field2].disabled}
                         readOnly={fields[field2].disabled}/>
                     </Form.Group> 
                   </Col> : '' }

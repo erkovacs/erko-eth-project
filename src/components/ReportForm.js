@@ -171,7 +171,10 @@ const ReportForm = props => {
           setReportType({ value: '', isValid: null });
           setFormStateTreatment(DEF_FIELDS_FORM_STATE_TREATMENT);
           setFormStateStatus(DEF_FIELDS_FORM_STATE_STATUS);
-          setOrders(orders.filter(order => orderId !== order.id));
+
+          // TODO:: do not remove. Simply update state of order and update
+          // setOrders(orders.filter(order => orderId !== order.id));
+          
           addToast('Success', 'Successfuly submitted report!');
         } else {
           throw new Error(`Error in transaction: ${JSON.stringify(result)}`);
