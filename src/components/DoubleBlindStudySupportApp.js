@@ -13,11 +13,9 @@ import { TITLE } from '../constants';
 import logo from '../logo.png';
 import './App.css';
 
-// TODO:: separate web3jsState and state
 const DoubleBlindStudySupportApp = props => {
   const { web3jsState, connectMetamask } = useContext(Web3Context);
   const [toasts, addToast] = useContext(ToastContext);
-  const [state, setState] = useState({});
   const [navTab, setNavTab] = useState('Enroll');
   const [reportType, setReportType] = useState({
     value: '', 
@@ -25,18 +23,14 @@ const DoubleBlindStudySupportApp = props => {
   });
 
   useEffect(() => {
-    setState(web3jsState);
-  }, [web3jsState, web3jsState.hasMetamask, web3jsState.isMetamaskConnected]);
-
-  useEffect(() => {
-    if (state.isOwner) {
+    if (web3jsState.isOwner) {
       setNavTab('Admin');
-    } else if (state.isStudyConcluded) {
+    } else if (web3jsState.isStudyConcluded) {
       setNavTab('Claim_reward');
     } else {
-      setNavTab(state.isPatientEnrolled ? 'Profile' : 'Enroll');
+      setNavTab(web3jsState.isPatientEnrolled ? 'Profile' : 'Enroll');
     }
-  }, [state.isOwner, state.isPatientEnrolled]);
+  }, [web3jsState.isOwner, web3jsState.isPatientEnrolled, web3jsState.isStudyConcluded]);
 
   return (
       <React.Fragment>
@@ -49,9 +43,9 @@ const DoubleBlindStudySupportApp = props => {
           <Navbar.Collapse className="justify-content-end">
             <Navbar.Text>
               { 
-              state.hasMetamask ? 
-                state.isMetamaskConnected ? 
-                <div>Connected with account: <a href="/#" onClick={e => null}>{state.account}</a></div> : 
+              web3jsState.hasMetamask ? 
+                web3jsState.isMetamaskConnected ? 
+                <div>Connected with account: <a href="/#" onClick={e => null}>{web3jsState.account}</a></div> : 
                 <div><a href="/#" onClick={() => connectMetamask()}>Please connect with MetaMask</a></div> :
               <div>Please connect with <a href="https://metamask.io/">MetaMask</a></div>
               } 
@@ -66,34 +60,46 @@ const DoubleBlindStudySupportApp = props => {
           <div className="row">
             <main role="main" className="col-lg-12 d-flex text-center">
               <div className="content mr-auto ml-auto col-lg-8 col-md-10">
-              { state.hasMetamask && state.isMetamaskConnected && 
-              !state.isStudyActive && !state.isOwner ? 
+              { web3jsState.hasMetamask && web3jsState.isMetamaskConnected && 
+              !web3jsState.isStudyActive && !web3jsState.isStudyConcluded && !web3jsState.isOwner ? 
                 <Alert variant="warning">
                   Study is not yet active. Please check back soon!
                 </Alert> : null }
+              
+              { web3jsState.hasMetamask && web3jsState.isMetamaskConnected && 
+              !web3jsState.isStudyActive && !web3jsState.isOwner && !web3jsState.hasBeenRewarded && web3jsState.isStudyConcluded ? 
+                <Alert variant="success">
+                  Study has concluded. Be sure to claim your reward!
+                </Alert> : null }
+              
+              { web3jsState.hasMetamask && web3jsState.isMetamaskConnected && 
+              !web3jsState.isStudyActive && !web3jsState.isOwner && web3jsState.hasBeenRewarded && web3jsState.isStudyConcluded ? 
+                <Alert variant="warning">
+                  You have been rewarded already! Please check back for other studies too.
+                </Alert> : null }
 
-              { state.hasMetamask ? 
-                  state.isMetamaskConnected ?
-                    state.isOwner ?
+              { web3jsState.hasMetamask ? 
+                  web3jsState.isMetamaskConnected ?
+                    web3jsState.isOwner ?
                       <Admin />
                       : 
                       <Tabs activeKey={navTab} onSelect={key => setNavTab(key)} id="nav-tabs">
-                        <Tab eventKey="Enroll" title="Enroll" disabled={state.isPatientEnrolled || state.isOwner}>
+                        <Tab eventKey="Enroll" title="Enroll" disabled={web3jsState.isPatientEnrolled || web3jsState.isOwner}>
                           <EnrollForm />
                         </Tab>
-                        <Tab eventKey="Profile" title="Profile" disabled={!state.isPatientEnrolled || state.isStudyConcluded}>
+                        <Tab eventKey="Profile" title="Profile" disabled={!web3jsState.isPatientEnrolled || web3jsState.isStudyConcluded}>
                           <Profile />
                         </Tab>
-                        <Tab eventKey="Order" title="Order" disabled={!state.isPatientEnrolled || state.isStudyConcluded}>
+                        <Tab eventKey="Order" title="Order" disabled={!web3jsState.isPatientEnrolled || web3jsState.isStudyConcluded}>
                           <OrderForm />
                         </Tab>
-                        <Tab eventKey="My_orders" title="My Orders" disabled={!state.isPatientEnrolled || state.isStudyConcluded}>
+                        <Tab eventKey="My_orders" title="My Orders" disabled={!web3jsState.isPatientEnrolled || web3jsState.isStudyConcluded}>
                           <OrderList setNavTab={setNavTab} setReportType={setReportType} />
                         </Tab>
-                        <Tab eventKey="Report" title="Report" disabled={!state.isPatientEnrolled || state.isStudyConcluded}>
+                        <Tab eventKey="Report" title="Report" disabled={!web3jsState.isPatientEnrolled || web3jsState.isStudyConcluded}>
                           <ReportForm reportType={reportType} setReportType={setReportType}/>
                         </Tab>
-                        <Tab eventKey="Claim_reward" title="Claim reward" disabled={!state.isStudyConcluded}>
+                        <Tab eventKey="Claim_reward" title="Claim reward" disabled={!web3jsState.isStudyConcluded}>
                           <ClaimReward />
                         </Tab>
                       </Tabs> :

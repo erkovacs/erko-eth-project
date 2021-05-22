@@ -5,7 +5,6 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "./MEDToken.sol";
 
 contract DoubleBlindStudy {
-
     using SafeMath for uint256;
 
     address private owner;
@@ -28,7 +27,7 @@ contract DoubleBlindStudy {
 
     event StudyActivated(uint256 ts);
     event StudyConcluded(uint256 ts, string reason);
-    event PatientRewarded(uint256 amount);
+    event PatientRewarded(bytes32 patientId, uint256 amount);
 
     modifier requireOwner {
         require(
@@ -39,14 +38,17 @@ contract DoubleBlindStudy {
     }
 
     modifier requireActive {
-        require(active, "Error: study is not active");
+        require(
+            active && (startDate <= block.timestamp),
+            "Error: study is not active"
+        );
         _;
     }
 
-    modifier requireConcluded {
+    modifier requireInactive {
         require(
-            !active, /*&& (endDate <= block.timestamp)*/
-            "Error: study has not yet been concluded"
+            !active,
+            "Error: study is active"
         );
         _;
     }
@@ -100,7 +102,7 @@ contract DoubleBlindStudy {
         pot = _pot;
         duration = _duration;
         startDate = _startDate;
-        endDate = startDate + _duration;
+        endDate = startDate.add(_duration);
 
         patientCount = 0;
         reportCount = 0;
@@ -146,7 +148,7 @@ contract DoubleBlindStudy {
         return msg.sender == owner;
     }
 
-    function activate() public requireOwner {
+    function activate() public requireOwner requireInactive {
         active = true;
         emit StudyActivated(block.timestamp);
     }
@@ -174,7 +176,8 @@ contract DoubleBlindStudy {
             bytes32,
             bytes32,
             string memory,
-            uint256
+            uint256,
+            bool
         )
     {
         bytes32 patientId = _getHash(_address);
@@ -184,7 +187,8 @@ contract DoubleBlindStudy {
             patient._patientId,
             patient._mappingId,
             patient._data,
-            patient._enrolledOn
+            patient._enrolledOn,
+            patient._hasBeenRewarded
         );
     }
 
@@ -276,7 +280,7 @@ contract DoubleBlindStudy {
     }
 
     /*
-      fired at the end of the study (on or after endDate)
+      fired at the end of the study
     */
     function conclude(string memory reason) public requireOwner requireActive {
         active = false;
@@ -287,19 +291,19 @@ contract DoubleBlindStudy {
       returns whether the study has concluded
     */
     function isConcluded() public view returns (bool) {
-        return !active; //&& (endDate <= block.timestamp);
+        return !active;
     }
 
     /*
       called in order to distribute the reward to the
       caller 
 
-      T_MED = 100 + (rc * 10) + (rc/mc * 100)
-      T_MED = total MED rewarded
+      t_med = 100 + (rc * 10) + (rc/mc * 100)
+      t_med = total MED rewarded
       rc = report count
       mc = month count
     */
-    function claimReward() public requireConcluded {
+    function claimReward() public requireInactive {
         bytes32 patientId = _getHash(msg.sender);
 
         require(
@@ -331,7 +335,7 @@ contract DoubleBlindStudy {
 
         pot.mint(msg.sender, tMed);
         patients[patientId]._hasBeenRewarded = true;
-        
-        emit PatientRewarded(tMed);
+
+        emit PatientRewarded(patientId, tMed);
     }
 }

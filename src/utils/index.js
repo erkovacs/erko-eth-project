@@ -26,3 +26,7 @@ export const redactString = (string, count, maxLength) => {
   }
   return string;
 }
+
+export const parseBool = string => {
+  return string == 'true' ? true : false
+}
