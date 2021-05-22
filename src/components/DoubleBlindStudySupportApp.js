@@ -61,9 +61,21 @@ const DoubleBlindStudySupportApp = props => {
             <main role="main" className="col-lg-12 d-flex text-center">
               <div className="content mr-auto ml-auto col-lg-8 col-md-10">
               { web3jsState.hasMetamask && web3jsState.isMetamaskConnected && 
-              !web3jsState.isStudyActive && !web3jsState.isOwner ? 
+              !web3jsState.isStudyActive && !web3jsState.isStudyConcluded && !web3jsState.isOwner ? 
                 <Alert variant="warning">
                   Study is not yet active. Please check back soon!
+                </Alert> : null }
+              
+              { web3jsState.hasMetamask && web3jsState.isMetamaskConnected && 
+              !web3jsState.isStudyActive && !web3jsState.isOwner && !web3jsState.hasBeenRewarded && web3jsState.isStudyConcluded ? 
+                <Alert variant="success">
+                  Study has concluded. Be sure to claim your reward!
+                </Alert> : null }
+              
+              { web3jsState.hasMetamask && web3jsState.isMetamaskConnected && 
+              !web3jsState.isStudyActive && !web3jsState.isOwner && web3jsState.hasBeenRewarded && web3jsState.isStudyConcluded ? 
+                <Alert variant="warning">
+                  You have been rewarded already! Please check back for other studies too.
                 </Alert> : null }
 
               { web3jsState.hasMetamask ? 

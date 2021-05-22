@@ -2,51 +2,16 @@ import React, { useState, useContext, useEffect } from 'react';
 import { Button, Card, Modal } from 'react-bootstrap';
 import { Web3Context } from './Web3Context';
 import { ToastContext } from './ToastContext';
-import { parseBool } from '../utils';
-import MEDToken from '../abis/MEDToken.json';
-
 
 const ClaimReward = props => {
-  const { web3jsState } = useContext(Web3Context);
+  const { web3jsState, proposeToken } = useContext(Web3Context);
   const [toasts, addToast] = useContext(ToastContext);
   const [show, setShow] = useState(false);
 
   useEffect(() => {
-    const hasToken = parseBool(window.localStorage.getItem('hasToken'));
-    if (!hasToken) loadMEDToken();
-  }, [])
-
-  const loadMEDToken = async () => {
-    window.localStorage.setItem('hasToken', false);
-
-    const networkId = await web3jsState.web3.eth.net.getId();
-    const { networks } = MEDToken;
-    const address = networks[networkId] ? networks[networkId].address : null;
-    const tokenSymbol = 'MED';
-    const tokenDecimals = 0;
-    const tokenImage = null;
-
-    let wasAdded = false;
-    try {
-      // wasAdded is a boolean. Like any RPC method, an error may be thrown.
-      wasAdded = await window.ethereum.request({
-        method: 'wallet_watchAsset',
-        params: {
-          type: 'ERC20', // Initially only supports ERC20, but eventually more!
-          options: {
-            address: address, // The address that the token is at.
-            symbol: tokenSymbol, // A ticker symbol or shorthand, up to 5 chars.
-            decimals: tokenDecimals, // The number of decimals in the token
-            image: tokenImage, // A string url of the token logo
-          },
-        },
-      });
-    } catch (e) {
-      console.log(e.message);
-      addToast('Error', e.message);
-    }
-    window.localStorage.setItem('hasToken', wasAdded);
-  }
+    console.log(web3jsState);
+    if (!web3jsState.hasToken) proposeToken();
+  }, [web3jsState.hasToken]);
 
   const handleClaimReward = async () => {
     try {
@@ -70,10 +35,7 @@ const ClaimReward = props => {
           </Card.Text>
         </Card.Body>
         <Card.Body>
-          {/* 
-            TODO:: Persist web3jsState.isPatientRewarded state in localStorage or pull from contract by adding a function for that 
-          */}
-          <Button variant="success" onClick={() => setShow(true)} disabled={web3jsState.isPatientRewarded}>Claim reward!</Button>
+          <Button variant="success" onClick={() => setShow(true)} disabled={web3jsState.hasBeenRewarded}>Claim reward!</Button>
         </Card.Body>
       </Card>
       <Modal show={show} onHide={() => setShow(false)}>
