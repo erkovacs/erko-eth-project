@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Web3Context } from './Web3Context';
 import { ToastContext } from './ToastContext';
+import { parseBool } from '../utils';
 
 export const ProfileContext = createContext();
 
@@ -55,6 +56,12 @@ export const ProfileProvider = props => {
         patientData.date = new Date(ts);
       } else {
         throw new Error('Invalid result received, no enrollment timestamp present.');
+      }
+
+      if (typeof result[5] !== 'undefined' && result[5] !== '') {
+        patientData.hasBeenRewarded = parseBool(result[5]);
+      } else {
+        throw new Error('Invalid result received, no reward information present.');
       }
     } catch (e) {
       addToast('Error', e.message);

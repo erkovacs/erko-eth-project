@@ -11,7 +11,7 @@ const { localStorage, ethereum } = window;
 export const Web3Context = createContext();
 
 export const Web3Provider = props => {
-  
+
   const [toasts, addToast] = useContext(ToastContext);
   const [state, setState] = useState({
     hasMetamask: false,
@@ -21,11 +21,12 @@ export const Web3Provider = props => {
     isStudyActive: null,
     study: null,
     address: null,
+    patientId: null,
     isOwner: false,
     isPatientEnrolled: false,
     isStudyConcluded: false,
-    hasToken: parseBool(localStorage.getItem('hasToken')),
-    hasBeenRewarded: parseBool(localStorage.getItem('hasBeenRewarded'))
+    hasToken: false,
+    hasBeenRewarded: false
   });
 
   useEffect(() => {
@@ -34,7 +35,7 @@ export const Web3Provider = props => {
     }
   }, [state.isMetamaskConnected]);
 
-  const loadBlockchainData = async () => {
+  async function loadBlockchainData() {
 
     // Check for object exposed by Metamask 
     if (typeof ethereum !== 'undefined') {
@@ -65,9 +66,8 @@ export const Web3Provider = props => {
           from: account
         });
 
-        let patientId, isPatientEnrolled;
+        let patientId, isPatientEnrolled, hasToken, hasBeenRewarded;
         const isStudyActive = await study.methods.active().call();
-
 
         // Check if we are enrolled
         patientId = await study.methods.isPatientEnrolled(account).call();
@@ -76,16 +76,38 @@ export const Web3Provider = props => {
         const isOwner = await study.methods.isOwner().call();
         const isConcluded = await study.methods.isConcluded().call();
 
+        hasToken = state.hasToken;
+        hasBeenRewarded = state.hasBeenRewarded;
+
+        // Grab whether patient was already paid
+        const patientData = await study.methods.getPatientData(account).call();
+        if (typeof patientData[5] !== 'undefined' && patientData[5] !== '') {
+          hasBeenRewarded = patientData[5];
+        }
+
+        // Create initial localStorage values
+        if (null === localStorage.getItem(`hasToken.${account}`)) {
+          localStorage.setItem(`hasToken.${account}`, false);
+        } else {
+          hasToken = parseBool(localStorage.getItem(`hasToken.${account}`));
+        }
+        if (null === localStorage.getItem(`hasBeenRewarded.${account}`)) {
+          localStorage.setItem(`hasBeenRewarded.${account}`, hasBeenRewarded);
+        }
+
         // Subscribe to events
         study.once('StudyActivated', {}, (error, event) => setState({ ...state, isStudyActive: true }));
         study.once('StudyConcluded', {}, (error, event) => setState({ ...state, isStudyActive: false }));
         study.once('PatientRewarded', { filter: { patientId: patientId } },
           (error, event) => {
-            setState({ ...state, hasBeenRewarded: true })
+            setState({ ...state, hasBeenRewarded: true });
+            localStorage.setItem(`hasBeenRewarded.${account}`, true);
           });
 
         setState({
           ...state,
+          hasToken: hasToken,
+          hasBeenRewarded: hasBeenRewarded,
           hasMetamask: true,
           web3: web3,
           address: address,
@@ -143,17 +165,13 @@ export const Web3Provider = props => {
       console.log(e.message);
       addToast('Error', e.message);
     }
-    localStorage.setItem('hasToken', wasAdded);
+    localStorage.setItem(`hasToken.${state.account}`, wasAdded);
     setState({ ...state, hasToken: wasAdded });
   }
 
   const connectMetamask = async () => await loadBlockchainData();
 
   const setWeb3jsState = async _state => setState(_state);
-
-  // Create initial localStorage values
-  if (null === localStorage.getItem('hasToken')) localStorage.setItem('hasToken', false);
-  if (null === localStorage.getItem('hasBeenRewarded')) localStorage.setItem('hasBeenRewarded', false);
 
   return (<Web3Context.Provider value={{
     web3jsState: state,

@@ -9,7 +9,6 @@ const ClaimReward = props => {
   const [show, setShow] = useState(false);
 
   useEffect(() => {
-    console.log(web3jsState);
     if (!web3jsState.hasToken) proposeToken();
   }, [web3jsState.hasToken]);
 
