@@ -47,11 +47,11 @@ The patient’s parameters are displayed in the Profile tab.
  
 Afterwards, the patient can launch an order for a Treatment Kit. They must provide an address for the delivery of the Treatment Kit which will be relayed to the third-party providing the Treatment Kits, but cannot be linked to the patient as the third party will only receive the Mapping ID, which is insufficient information to identify the patient with the address.
 
-![image](https://user-images.githubusercontent.com/32717298/118352178-a8506780-b568-11eb-95bb-1c26ac0d7964.png)
+![image](https://user-images.githubusercontent.com/32717298/119265767-82723500-bbf0-11eb-8aba-7ddc22f4c711.png)
 
 Orders are displayed under the “My Orders” tab. When the order is in status “confirmed” in the third-party’s system, the patient can report the administration of the Treatment Kit.
 
-![image](https://user-images.githubusercontent.com/32717298/118352184-aededf00-b568-11eb-9639-1ab0d01a0789.png)
+![image](https://user-images.githubusercontent.com/32717298/119265728-5e165880-bbf0-11eb-8e83-660b9579e92f.png)
 
 Submitting the report will create a Treatment Administration Report containing the Treatment Kit ID, the dosage, and a timestamp (independent from the block timestamp).
 
