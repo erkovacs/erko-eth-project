@@ -152,7 +152,14 @@ const OrderForm = props => {
               });
               
               setOrders(_orders);
-              setFields(FIELD_DEFAULTS);
+              setFields({ 
+                ...FIELD_DEFAULTS, 
+                mappingId: { 
+                  ...FIELD_DEFAULTS.mappingId, 
+                  value: patientData.mappingId, 
+                  isValid: true 
+                }
+              });
               addToast('Success', 'Successfuly placed order!');
             } else {
               throw new Error('Order could not be confirmed with drugstore.');
