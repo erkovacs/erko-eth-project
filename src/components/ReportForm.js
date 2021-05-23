@@ -3,7 +3,7 @@ import { Button, Card, Form } from 'react-bootstrap';
 import Slider from 'react-input-slider';
 import { Web3Context } from './Web3Context';
 import { ToastContext } from './ToastContext';
-import { OrderContext } from './OrderContext';
+import { OrderContext, OrderStates } from './OrderContext';
 import DatePickerInput from './DatePickerInput';
 import { nowUnix } from '../utils';
 import { REPORT_TYPES } from '../constants';
@@ -27,12 +27,12 @@ const ReportForm = props => {
   };
 
   const DEF_FIELDS_FORM_STATE_STATUS = {
-    temperature: { value: '', label: 'Temperature (deg C)', isValid: null, type: 'number'},
-    heartRate: { value: '', label: 'Heart rate (bps)', isValid: null, type: 'number'},
-    bloodPressureHi: { value: '', label: 'Systolic blood pressure (mm Hg)', isValid: null, type: 'number'},
-    bloodPressureLo: { value: '', label: 'Dyastolic blood pressure (mm Hg)', isValid: null, type: 'number'},
-    bloodOxygenContent: { value: '', label: 'Blood oxygen content (SpO2, %)', isValid: null, type: 'number'},
-    generalCondition: { value: 50, label: 'General condition', isValid: null, type: 'slider'},
+    temperature: { value: '', label: 'Temperature (deg C)', isValid: null, type: 'number' },
+    heartRate: { value: '', label: 'Heart rate (bps)', isValid: null, type: 'number' },
+    bloodPressureHi: { value: '', label: 'Systolic blood pressure (mm Hg)', isValid: null, type: 'number' },
+    bloodPressureLo: { value: '', label: 'Dyastolic blood pressure (mm Hg)', isValid: null, type: 'number' },
+    bloodOxygenContent: { value: '', label: 'Blood oxygen content (SpO2, %)', isValid: null, type: 'number' },
+    generalCondition: { value: 50, label: 'General condition', isValid: null, type: 'slider' },
     notes: { value: '', label: 'Notes', isValid: null, type: 'text' },
     timeOfReport: { value: nowUnix(), label: 'Time of Report', isValid: null, type: 'text' }
   };
@@ -44,8 +44,12 @@ const ReportForm = props => {
   const [formStateStatus, setFormStateStatus] = useState(DEF_FIELDS_FORM_STATE_STATUS);
 
   useEffect(() => {
+    // set active order
     if (orders.length > 0) {
-      setFormStateTreatment({ ...formStateTreatment, treatmentKitId: { value: orders[0].id, isValid: true } });
+      const activeOrder = orders.find(order => order.state === OrderStates.Confirmed);
+      if (activeOrder) {
+        setFormStateTreatment({ ...formStateTreatment, treatmentKitId: { value: activeOrder.id, isValid: true } });
+      }
     }
   }, [orders])
 
@@ -60,9 +64,9 @@ const ReportForm = props => {
         isValid
       });
     } else {
-     
+
       let form, setter, fieldHandle = null;
-      
+
       if (field in formStateTreatment) {
         form = formStateTreatment;
         setter = setFormStateTreatment;
@@ -74,7 +78,7 @@ const ReportForm = props => {
       fieldHandle = form[field];
       fieldHandle.isValid = isValid;
       fieldHandle.value = value;
-      
+
       setter({ ...form, [field]: fieldHandle });
     }
   }
@@ -106,7 +110,7 @@ const ReportForm = props => {
   const validateForm = () => {
     let valid = true;
 
-    const form = REPORT_TYPES.STATUS_REPORT.value === reportType.value ? 
+    const form = REPORT_TYPES.STATUS_REPORT.value === reportType.value ?
       formStateStatus : formStateTreatment;
 
     const fields = Object.keys(form);
@@ -136,7 +140,7 @@ const ReportForm = props => {
     for (let field of fields) {
       payload[field] = form[field].value;
     }
-    
+
     return JSON.stringify(payload);
   }
 
@@ -144,11 +148,11 @@ const ReportForm = props => {
     e.preventDefault();
 
     if (true === submitting) {
-      return; 
+      return;
     } else {
       setSubmitting(true);
     }
-    
+
     if (validateForm()) {
       let form, method = null;
 
@@ -159,19 +163,28 @@ const ReportForm = props => {
         form = formStateTreatment;
         method = 'reportTreatmentAdministration';
       }
-      
+
       let payload = serializeFields(form);
-      
+
       try {
         let result = await web3jsState.study.methods[method](payload).send();
         if (result.status) {
           const orderId = formStateTreatment.treatmentKitId.value;
-          
+
           // Reset fields
           setReportType({ value: '', isValid: null });
           setFormStateTreatment(DEF_FIELDS_FORM_STATE_TREATMENT);
           setFormStateStatus(DEF_FIELDS_FORM_STATE_STATUS);
-          setOrders(orders.filter(order => orderId !== order.id));
+
+          const newOrders = orders.map(order => {
+            if (orderId === order.id) {
+              console.log(orderId, order);
+              order.state = OrderStates.Closed;
+            }
+            return order;
+          });
+
+          setOrders(newOrders);
           addToast('Success', 'Successfuly submitted report!');
         } else {
           throw new Error(`Error in transaction: ${JSON.stringify(result)}`);
@@ -197,7 +210,7 @@ const ReportForm = props => {
             <Form.Group controlId="reportType">
               <Form.Label>Report type</Form.Label>
               <Form.Control as="select" value={reportType.value} onChange={e => handleChange('reportType', e)}>
-                { 
+                {
                   Object.keys(REPORT_TYPES).map(
                     (_reportType, i) => {
                       return <option
@@ -205,133 +218,133 @@ const ReportForm = props => {
                         value={REPORT_TYPES[_reportType].value}>
                         {REPORT_TYPES[_reportType].label}
                       </option>;
-                    }) 
+                    })
                 }
               </Form.Control>
             </Form.Group>
-            
-            { reportType.value ? <Form.Text className="text-muted">
-                Please use metric units
-            </Form.Text> : null }
+
+            {reportType.value ? <Form.Text className="text-muted">
+              Please use metric units
+            </Form.Text> : null}
 
             {
-            REPORT_TYPES.TREATMENT_ADMINISTRATION_REPORT.value === reportType.value ? 
-              <React.Fragment>
-                <Form.Text className="card-title h5">
-                  {REPORT_TYPES.TREATMENT_ADMINISTRATION_REPORT.label}
-                </Form.Text>
-                <Form.Group controlId="treatmentKitId">
-                  <Form.Label>Treatment kit ID: </Form.Label>
-                  <Form.Control 
-                    isInvalid={formStateTreatment.treatmentKitId.isValid === false} 
-                    isValid={formStateTreatment.treatmentKitId.isValid === true} 
-                    type="text" 
-                    value={formStateTreatment.treatmentKitId.value} 
-                    onChange={e => handleChange('treatmentKitId', e)} 
-                    placeholder={'<No current active order>'}
-                    disabled={true} />
+              REPORT_TYPES.TREATMENT_ADMINISTRATION_REPORT.value === reportType.value ?
+                <React.Fragment>
+                  <Form.Text className="card-title h5">
+                    {REPORT_TYPES.TREATMENT_ADMINISTRATION_REPORT.label}
+                  </Form.Text>
+                  <Form.Group controlId="treatmentKitId">
+                    <Form.Label>Treatment kit ID: </Form.Label>
+                    <Form.Control
+                      isInvalid={formStateTreatment.treatmentKitId.isValid === false}
+                      isValid={formStateTreatment.treatmentKitId.isValid === true}
+                      type="text"
+                      value={formStateTreatment.treatmentKitId.value}
+                      onChange={e => handleChange('treatmentKitId', e)}
+                      placeholder={'<No current active order>'}
+                      disabled={true} />
+                  </Form.Group>
+                  <Form.Group controlId="dosage">
+                    <Form.Label>Dosage (mg): </Form.Label>
+                    <Form.Control
+                      isInvalid={formStateTreatment.dosage.isValid === false}
+                      isValid={formStateTreatment.dosage.isValid === true}
+                      type="number"
+                      value={formStateTreatment.dosage.value}
+                      onChange={e => handleChange('dosage', e)} />
+                  </Form.Group>
+                  <Form.Group controlId="timeOfAdministration">
+                    <Form.Label>Date/Time of administration: </Form.Label><br></br>
+                    <DatePickerInput
+                      initialValue={formStateTreatment.timeOfAdministration.value}
+                      /* Hacks beget hacks... */
+                      onChange={datetime => handleChange('timeOfAdministration', { target: { value: datetime } })}
+                      isInvalid={formStateTreatment.timeOfAdministration.isValid === false}
+                      isValid={formStateTreatment.timeOfAdministration.isValid === true}
+                    /> UTC
                 </Form.Group>
-                <Form.Group controlId="dosage">
-                  <Form.Label>Dosage (mg): </Form.Label>
-                  <Form.Control 
-                    isInvalid={formStateTreatment.dosage.isValid === false} 
-                    isValid={formStateTreatment.dosage.isValid === true} 
-                    type="number" 
-                    value={formStateTreatment.dosage.value} 
-                    onChange={e => handleChange('dosage', e)} />
-                </Form.Group>
-                <Form.Group controlId="timeOfAdministration">
-                  <Form.Label>Date/Time of administration: </Form.Label><br></br> 
-                  <DatePickerInput 
-                    initialValue={formStateTreatment.timeOfAdministration.value}
-                    /* Hacks beget hacks... */
-                    onChange={datetime => handleChange('timeOfAdministration', { target: { value: datetime } })}
-                    isInvalid={formStateTreatment.timeOfAdministration.isValid === false} 
-                    isValid={formStateTreatment.timeOfAdministration.isValid === true} 
-                  /> UTC
-                </Form.Group>
-              </React.Fragment> :
-              ''
+                </React.Fragment> :
+                ''
             }
 
             {
-            REPORT_TYPES.STATUS_REPORT.value === reportType.value ? 
-              <React.Fragment>
-                <Form.Text className="card-title h5">
-                  {REPORT_TYPES.STATUS_REPORT.label}
-                </Form.Text>
-                
-                { [
-                  'temperature', 
-                  'heartRate', 
-                  'bloodPressureHi', 
-                  'bloodPressureLo', 
-                  'bloodOxygenContent'
-                ].map(field => {
-                  return (
-                    <Form.Group controlId={field} key={`formStateStatus_${field}`}>
-                      <Form.Label>{formStateStatus[field].label} :</Form.Label>
-                      <Form.Control 
-                        isInvalid={formStateStatus[field].isValid === false} 
-                        isValid={formStateStatus[field].isValid === true} 
-                        type={formStateStatus[field].type} 
-                        value={formStateStatus[field].value} 
-                        onChange={e => handleChange(field, e)} />
-                    </Form.Group>
-                  );
-                })}
+              REPORT_TYPES.STATUS_REPORT.value === reportType.value ?
+                <React.Fragment>
+                  <Form.Text className="card-title h5">
+                    {REPORT_TYPES.STATUS_REPORT.label}
+                  </Form.Text>
 
-                <Form.Group controlId='generalCondition'>
-                  <Form.Label>General condition :</Form.Label><br></br>
-                  <Slider
-                    axis="x"
-                    x={formStateStatus.generalCondition.value}
-                    styles={{
-                      active: {
-                        backgroundColor: getSliderColor()
-                      }
-                    }}
-                    onChange={({ x }) => handleChange('generalCondition', { target: { value: x } })}
-                  />
-                </Form.Group>
-                <Form.Text className="text-muted">
-                Please assess your general condition
+                  {[
+                    'temperature',
+                    'heartRate',
+                    'bloodPressureHi',
+                    'bloodPressureLo',
+                    'bloodOxygenContent'
+                  ].map(field => {
+                    return (
+                      <Form.Group controlId={field} key={`formStateStatus_${field}`}>
+                        <Form.Label>{formStateStatus[field].label} :</Form.Label>
+                        <Form.Control
+                          isInvalid={formStateStatus[field].isValid === false}
+                          isValid={formStateStatus[field].isValid === true}
+                          type={formStateStatus[field].type}
+                          value={formStateStatus[field].value}
+                          onChange={e => handleChange(field, e)} />
+                      </Form.Group>
+                    );
+                  })}
+
+                  <Form.Group controlId='generalCondition'>
+                    <Form.Label>General condition :</Form.Label><br></br>
+                    <Slider
+                      axis="x"
+                      x={formStateStatus.generalCondition.value}
+                      styles={{
+                        active: {
+                          backgroundColor: getSliderColor()
+                        }
+                      }}
+                      onChange={({ x }) => handleChange('generalCondition', { target: { value: x } })}
+                    />
+                  </Form.Group>
+                  <Form.Text className="text-muted">
+                    Please assess your general condition
                 </Form.Text>
-                <Form.Group controlId='notes'>
-                  <Form.Label>Notes :</Form.Label>
-                  <Form.Control 
-                    as="textarea" 
-                    rows={4} 
-                    isInvalid={formStateStatus.notes.isValid === false} 
-                    isValid={formStateStatus.notes.isValid === true} 
-                    onChange={ e => handleChange('notes', e) } 
-                  />
-                </Form.Group>
-                <Form.Text className="text-muted">
-                {`${formStateStatus.notes.value ? formStateStatus.notes.value.length : 0} / 15 characters`}
-                </Form.Text>
-                <Form.Group controlId='timeOfReport'>
-                  <Form.Label>Time of Report :</Form.Label><br></br>
-                  <DatePickerInput 
-                    initialValue={formStateStatus.timeOfReport.value}
-                    onChange={datetime => handleChange('timeOfReport', { target: { value: datetime } })}
-                    isInvalid={formStateStatus.timeOfReport.isValid === false} 
-                    isValid={formStateStatus.timeOfReport.isValid === true} 
-                  /> UTC
+                  <Form.Group controlId='notes'>
+                    <Form.Label>Notes :</Form.Label>
+                    <Form.Control
+                      as="textarea"
+                      rows={4}
+                      isInvalid={formStateStatus.notes.isValid === false}
+                      isValid={formStateStatus.notes.isValid === true}
+                      onChange={e => handleChange('notes', e)}
+                    />
+                  </Form.Group>
+                  <Form.Text className="text-muted">
+                    {`${formStateStatus.notes.value ? formStateStatus.notes.value.length : 0} / 15 characters`}
+                  </Form.Text>
+                  <Form.Group controlId='timeOfReport'>
+                    <Form.Label>Time of Report :</Form.Label><br></br>
+                    <DatePickerInput
+                      initialValue={formStateStatus.timeOfReport.value}
+                      onChange={datetime => handleChange('timeOfReport', { target: { value: datetime } })}
+                      isInvalid={formStateStatus.timeOfReport.isValid === false}
+                      isValid={formStateStatus.timeOfReport.isValid === true}
+                    /> UTC
                 </Form.Group>
 
-              </React.Fragment>:
-              ''
+                </React.Fragment> :
+                ''
             }
 
             {
-            REPORT_TYPES.NONE.value !== reportType.value ? 
-              <Button 
-                variant="primary" 
-                type="submit" 
-                disabled={submitting === true}
-                onClick={e => onSubmit(e)}>
-                Submit
+              REPORT_TYPES.NONE.value !== reportType.value ?
+                <Button
+                  variant="primary"
+                  type="submit"
+                  disabled={submitting === true}
+                  onClick={e => onSubmit(e)}>
+                  Submit
               </Button> : ''
             }
           </Form>

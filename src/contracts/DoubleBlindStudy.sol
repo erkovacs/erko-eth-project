@@ -15,15 +15,15 @@ contract DoubleBlindStudy {
 
     uint256 private patientCount;
     mapping(bytes32 => Patient) private patients;
-
-    uint256 private orderCount;
-    mapping(uint256 => Order) private orders;
     mapping(bytes32 => uint256) private patientOrder;
 
     uint256 private reportCount;
     mapping(uint256 => Report) private reports;
 
     bool public active;
+
+    uint256 public orderCount;
+    mapping(uint256 => Order) public orders;
 
     event StudyActivated(uint256 ts);
     event StudyConcluded(uint256 ts, string reason);
