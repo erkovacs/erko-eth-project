@@ -61,6 +61,10 @@ A different kind of report is the Status Report. It includes more general inform
 
 ![image](https://user-images.githubusercontent.com/32717298/118352199-bbfbce00-b568-11eb-9508-a6f3ded4a464.png)
 
+At the conclusion of the study, the patient can claim their reward in MED Token:
+
+![image](https://user-images.githubusercontent.com/32717298/119265940-66bb5e80-bbf1-11eb-9075-ae9085f32ed9.png)
+
 The owner of the contract has administrative access to the application and cannot be a participant himself, at least not with the same account. They can view a dashboard containing general data about the status of the study, and can activate/deactivate it, as well as take the emergency measures of stopping for safety/stopping for efficiency.
 
 ![image](https://user-images.githubusercontent.com/32717298/118352350-ac30b980-b569-11eb-8905-baa89abe61e6.png)
