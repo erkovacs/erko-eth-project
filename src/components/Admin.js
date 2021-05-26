@@ -112,6 +112,10 @@ const Admin = props => {
 
   const handleStopForSafety = () => conclude('Study stopped for safety');
 
+  const handleGetData = () => {
+    // TODO:: get data
+  }
+
   return (
     <div>
       <br></br>
@@ -144,6 +148,10 @@ const Admin = props => {
               <tr>
                 <td>Conclude study </td>
                 <td><Button variant="primary" disabled={!web3jsState.isStudyActive} onClick={() => handleShow('handleConcludeStudy')}>Conclude study</Button></td>
+              </tr>
+              <tr>
+                <td>Get data</td>
+                <td><Button variant="primary" disabled={web3jsState.isStudyActive} onClick={() => handleGetData()}>Get data</Button></td>
               </tr>
             </tbody>
           </Table>
