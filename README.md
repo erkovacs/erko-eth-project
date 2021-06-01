@@ -71,5 +71,4 @@ The owner of the contract has administrative access to the application and canno
 
 They can also retrieve data after deactivating the study:
 
-![image](https://user-images.githubusercontent.com/32717298/120339612-edf98800-c2fd-11eb-8fe9-c5842ba5e7b1.png)
-
+![image](https://user-images.githubusercontent.com/32717298/120339777-12edfb00-c2fe-11eb-9923-8ddeba0048a7.png)
