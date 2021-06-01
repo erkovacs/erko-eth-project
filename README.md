@@ -68,3 +68,8 @@ At the conclusion of the study, the patient can claim their reward in MED Token:
 The owner of the contract has administrative access to the application and cannot be a participant himself, at least not with the same account. They can view a dashboard containing general data about the status of the study, and can activate/deactivate it, as well as take the emergency measures of stopping for safety/stopping for efficiency.
 
 ![image](https://user-images.githubusercontent.com/32717298/118352350-ac30b980-b569-11eb-8905-baa89abe61e6.png)
+
+They can also retrieve data after deactivating the study:
+
+![image](https://user-images.githubusercontent.com/32717298/120339612-edf98800-c2fd-11eb-8fe9-c5842ba5e7b1.png)
+
