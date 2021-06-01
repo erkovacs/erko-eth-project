@@ -13,14 +13,15 @@ contract DoubleBlindStudy {
     uint256 private endDate;
     uint256 private duration;
 
-    uint256 private patientCount;
-    mapping(bytes32 => Patient) private patients;
     mapping(bytes32 => uint256) private patientOrder;
 
-    uint256 private reportCount;
-    mapping(uint256 => Report) private reports;
-
     bool public active;
+    
+    uint256 public patientCount;
+    mapping(bytes32 => Patient) public patients;
+    
+    uint256 public reportCount;
+    mapping(uint256 => Report) public reports;
 
     uint256 public orderCount;
     mapping(uint256 => Order) public orders;
